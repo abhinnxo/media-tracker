@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MediaItem, MediaCategory, MediaStatus } from '@/lib/types';
@@ -69,7 +70,7 @@ export const MediaForm: React.FC<MediaFormProps> = ({
   
   // Handle rating change
   const handleRatingChange = (value: string) => {
-    const rating = value === '' ? undefined : parseInt(value, 10);
+    const rating = value === 'no-rating' ? undefined : parseInt(value, 10);
     setFormData(prev => ({ ...prev, rating }));
   };
   
@@ -257,14 +258,14 @@ export const MediaForm: React.FC<MediaFormProps> = ({
         <div className="space-y-2">
           <Label htmlFor="rating">Rating (0-10)</Label>
           <Select
-            value={formData.rating?.toString() || ''}
+            value={formData.rating?.toString() || 'no-rating'}
             onValueChange={handleRatingChange}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select rating" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">No Rating</SelectItem>
+              <SelectItem value="no-rating">No Rating</SelectItem>
               {[...Array(11)].map((_, i) => (
                 <SelectItem key={i} value={i.toString()}>
                   {i} / 10
