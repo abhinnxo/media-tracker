@@ -35,7 +35,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
     noResults: {
       icon: Search,
       title: title || 'No Results Found',
-      description: description || 'Try adjusting your search or filters to find what you're looking for.',
+      description: description || 'Try adjusting your search or filters to find what you\'re looking for.',
       actionLabel: actionLabel || 'Reset Filters',
     },
     error: {
