@@ -6,15 +6,22 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, Search, X } from 'lucide-react';
 import { useDebounce } from '@/hooks/use-debounce';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface MediaSearchProps {
-  category: MediaCategory;
+  category?: MediaCategory;
   onSelect: (result: MediaSearchResult) => void;
   className?: string;
 }
 
 export const MediaSearch: React.FC<MediaSearchProps> = ({
-  category,
+  category: initialCategory,
   onSelect,
   className,
 }) => {
@@ -22,8 +29,17 @@ export const MediaSearch: React.FC<MediaSearchProps> = ({
   const [results, setResults] = useState<MediaSearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<MediaCategory>(
+    initialCategory || MediaCategory.MOVIE
+  );
   const debouncedQuery = useDebounce(query, 500);
   const searchRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (initialCategory) {
+      setSelectedCategory(initialCategory);
+    }
+  }, [initialCategory]);
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -35,7 +51,7 @@ export const MediaSearch: React.FC<MediaSearchProps> = ({
 
       setIsLoading(true);
       try {
-        const searchResults = await mediaApi.search(debouncedQuery, category);
+        const searchResults = await mediaApi.search(debouncedQuery, selectedCategory);
         setResults(searchResults);
         setIsOpen(searchResults.length > 0);
       } catch (error) {
@@ -46,7 +62,7 @@ export const MediaSearch: React.FC<MediaSearchProps> = ({
     };
 
     fetchResults();
-  }, [debouncedQuery, category]);
+  }, [debouncedQuery, selectedCategory]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -72,38 +88,60 @@ export const MediaSearch: React.FC<MediaSearchProps> = ({
     setResults([]);
   };
 
+  const handleCategoryChange = (value: string) => {
+    setSelectedCategory(value as MediaCategory);
+    setResults([]);
+  };
+
   return (
     <div ref={searchRef} className={`relative ${className}`}>
       <Label htmlFor="mediaSearch">Search for media</Label>
-      <div className="relative">
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-          <Search size={16} />
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+            <Search size={16} />
+          </div>
+          <Input
+            id="mediaSearch"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              if (e.target.value.length >= 3) {
+                setIsOpen(true);
+              }
+            }}
+            placeholder={`Search for ${selectedCategory.toLowerCase()}...`}
+            className="pl-9 pr-9"
+          />
+          {query && (
+            <button
+              type="button"
+              onClick={clearSearch}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
-        <Input
-          id="mediaSearch"
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            if (e.target.value.length >= 3) {
-              setIsOpen(true);
-            }
-          }}
-          placeholder={`Search for ${category.toLowerCase()}...`}
-          className="pl-9 pr-9"
-        />
-        {query && (
-          <button
-            type="button"
-            onClick={clearSearch}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-          >
-            <X size={16} />
-          </button>
-        )}
+        <Select 
+          value={selectedCategory} 
+          onValueChange={handleCategoryChange}
+        >
+          <SelectTrigger className="w-[140px]">
+            <SelectValue placeholder="Select media type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={MediaCategory.MOVIE}>Movie</SelectItem>
+            <SelectItem value={MediaCategory.TV_SERIES}>TV Series</SelectItem>
+            <SelectItem value={MediaCategory.ANIME}>Anime</SelectItem>
+            <SelectItem value={MediaCategory.BOOK}>Book</SelectItem>
+            <SelectItem value={MediaCategory.MANGA}>Manga</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       
       {isLoading && (
-        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+        <div className="absolute right-[160px] top-[42px]">
           <Loader2 size={16} className="animate-spin text-primary" />
         </div>
       )}
