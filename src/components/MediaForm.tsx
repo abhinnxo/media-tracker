@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MediaItem, MediaCategory, MediaStatus } from '@/lib/types';
@@ -20,6 +19,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { MediaSearch } from '@/components/MediaSearch';
+import { MediaSearchResult } from '@/lib/api';
 
 interface MediaFormProps {
   initialData?: MediaItem;
@@ -72,6 +73,22 @@ export const MediaForm: React.FC<MediaFormProps> = ({
   const handleRatingChange = (value: string) => {
     const rating = value === 'no-rating' ? undefined : parseInt(value, 10);
     setFormData(prev => ({ ...prev, rating }));
+  };
+  
+  // Handle media search result selection
+  const handleMediaSelect = (result: MediaSearchResult) => {
+    setFormData(prev => ({
+      ...prev,
+      title: result.title,
+      imageUrl: result.imageUrl,
+      description: result.description,
+      category: result.category,
+    }));
+    
+    toast({
+      title: "Media info loaded",
+      description: `${result.title} details have been loaded`,
+    });
   };
   
   // Handle tag input
@@ -161,6 +178,18 @@ export const MediaForm: React.FC<MediaFormProps> = ({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
+        {/* Auto-suggestion Search */}
+        <div className="space-y-2 mb-6">
+          <MediaSearch
+            category={formData.category || MediaCategory.MOVIE}
+            onSelect={handleMediaSelect}
+            className="w-full"
+          />
+          <p className="text-sm text-muted-foreground">
+            Search for media to auto-fill the form or enter details manually below
+          </p>
+        </div>
+        
         {/* Title */}
         <div className="space-y-2">
           <Label htmlFor="title">Title <span className="text-destructive">*</span></Label>
