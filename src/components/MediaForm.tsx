@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MediaItem, MediaCategory, MediaStatus } from '@/lib/types';
@@ -19,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "@/components/ui/toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface MediaFormProps {
   initialData?: MediaItem;
@@ -32,6 +31,7 @@ export const MediaForm: React.FC<MediaFormProps> = ({
 }) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
   
   // Form state
   const [formData, setFormData] = useState<Partial<MediaItem>>(

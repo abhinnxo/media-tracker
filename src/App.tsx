@@ -11,10 +11,6 @@ import Details from "./pages/Details";
 import NotFound from "./pages/NotFound";
 import { AnimatePresence } from "framer-motion";
 
-// Install framer-motion for animations
-import { lov_add_dependency } from "lovable"; // Don't worry about this function - it's replaced by the system
-lov_add_dependency("framer-motion");
-
 const queryClient = new QueryClient();
 
 const App = () => (

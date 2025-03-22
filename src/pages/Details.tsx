@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { MediaItem, MediaStatus } from '@/lib/types';
@@ -26,7 +25,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { toast } from "@/components/ui/toast";
+import { useToast } from "@/hooks/use-toast";
 import { 
   ArrowLeft, 
   Edit, 
@@ -52,6 +51,7 @@ const Details: React.FC = () => {
   const navigate = useNavigate();
   const [mediaItem, setMediaItem] = useState<MediaItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
   
   useEffect(() => {
     const fetchMediaItem = async () => {
@@ -77,7 +77,7 @@ const Details: React.FC = () => {
     };
     
     fetchMediaItem();
-  }, [id, navigate]);
+  }, [id, navigate, toast]);
   
   const handleDelete = async () => {
     if (!mediaItem) return;
@@ -212,7 +212,6 @@ const Details: React.FC = () => {
   return (
     <Layout>
       <div>
-        {/* Back button */}
         <Button 
           variant="ghost" 
           onClick={() => navigate(-1)} 
@@ -223,7 +222,6 @@ const Details: React.FC = () => {
         </Button>
         
         <div className="grid grid-cols-1 md:grid-cols-[250px_1fr] gap-8">
-          {/* Media Image */}
           <AnimatedTransition variant="slideRight" className="order-2 md:order-1">
             <div className="rounded-xl overflow-hidden aspect-[2/3] bg-muted">
               {mediaItem.imageUrl ? (
@@ -240,7 +238,6 @@ const Details: React.FC = () => {
             </div>
           </AnimatedTransition>
           
-          {/* Media Details */}
           <AnimatedTransition variant="slideUp" className="space-y-6 order-1 md:order-2">
             <div className="flex justify-between items-start">
               <div>
@@ -252,7 +249,6 @@ const Details: React.FC = () => {
                 <StatusBadge status={mediaItem.status} size="lg" />
               </div>
               
-              {/* Actions Menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon">
@@ -296,7 +292,6 @@ const Details: React.FC = () => {
               </DropdownMenu>
             </div>
             
-            {/* Description */}
             {mediaItem.description && (
               <div>
                 <h2 className="text-lg font-medium mb-2">Description</h2>
@@ -304,7 +299,6 @@ const Details: React.FC = () => {
               </div>
             )}
             
-            {/* Rating */}
             {mediaItem.rating !== undefined && (
               <div>
                 <h2 className="flex items-center text-lg font-medium mb-2">
@@ -317,7 +311,6 @@ const Details: React.FC = () => {
               </div>
             )}
             
-            {/* Change Status */}
             <div>
               <h2 className="text-lg font-medium mb-3">Change Status</h2>
               <div className="flex flex-wrap gap-2">
@@ -369,9 +362,7 @@ const Details: React.FC = () => {
               </div>
             </div>
             
-            {/* Additional Info */}
             <div className="space-y-4">
-              {/* Dates */}
               {(mediaItem.startDate || mediaItem.endDate) && (
                 <div>
                   <h2 className="flex items-center text-lg font-medium mb-2">
@@ -395,7 +386,6 @@ const Details: React.FC = () => {
                 </div>
               )}
               
-              {/* Tags */}
               {mediaItem.tags && mediaItem.tags.length > 0 && (
                 <div>
                   <h2 className="flex items-center text-lg font-medium mb-2">
@@ -415,7 +405,6 @@ const Details: React.FC = () => {
                 </div>
               )}
               
-              {/* Notes */}
               {mediaItem.notes && (
                 <div>
                   <h2 className="flex items-center text-lg font-medium mb-2">
