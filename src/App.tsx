@@ -1,10 +1,19 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
+import Library from "./pages/Library";
+import AddEdit from "./pages/AddEdit";
+import Details from "./pages/Details";
 import NotFound from "./pages/NotFound";
+import { AnimatePresence } from "framer-motion";
+
+// Install framer-motion for animations
+import { lov_add_dependency } from "lovable"; // Don't worry about this function - it's replaced by the system
+lov_add_dependency("framer-motion");
 
 const queryClient = new QueryClient();
 
@@ -14,11 +23,16 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AnimatePresence mode="wait">
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/library" element={<Library />} />
+            <Route path="/add" element={<AddEdit />} />
+            <Route path="/edit/:id" element={<AddEdit />} />
+            <Route path="/details/:id" element={<Details />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AnimatePresence>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
