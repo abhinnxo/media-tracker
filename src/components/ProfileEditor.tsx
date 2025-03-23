@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useProfileStore } from '@/lib/profile';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -9,55 +9,124 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { User, Upload } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { profileService } from '@/lib/profile-service';
 
 export const ProfileEditor = () => {
   const profile = useProfileStore(state => state.profile);
-  const updateProfile = useProfileStore(state => state.updateProfile);
+  const updateProfileState = useProfileStore(state => state.updateProfile);
+  const { user } = useAuth();
   
   const [name, setName] = React.useState(profile.name || '');
   const [username, setUsername] = React.useState(profile.username || '');
   const [about, setAbout] = React.useState(profile.about || '');
   const [pronouns, setPronouns] = React.useState(profile.pronouns || 'they/them');
+  const [loading, setLoading] = React.useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // Load profile from Supabase on component mount
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user) return;
+      
+      try {
+        const dbProfile = await profileService.getProfile(user.id);
+        if (dbProfile) {
+          // Update local state
+          setName(dbProfile.name || '');
+          setUsername(dbProfile.username || '');
+          setAbout(dbProfile.about || '');
+          setPronouns(dbProfile.pronouns || 'they/them');
+          
+          // Update global state
+          updateProfileState(dbProfile);
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      }
+    };
     
-    // Create a file reader to read the uploaded image
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (event.target?.result) {
-        updateProfile({ 
+    loadProfile();
+  }, [user, updateProfileState]);
+  
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    
+    setLoading(true);
+    
+    try {
+      // Upload to Supabase storage
+      const avatarUrl = await profileService.uploadAvatar(file, user.id);
+      
+      if (avatarUrl) {
+        // Update local profile state
+        const updatedProfile = { 
           ...profile,
-          image: event.target.result as string 
-        });
+          image: avatarUrl 
+        };
+        
+        // Save to Supabase and update local state
+        await profileService.updateProfile(updatedProfile, user.id);
+        updateProfileState(updatedProfile);
+        
         toast({
           title: "Image updated",
           description: "Your profile image has been updated successfully"
         });
       }
-    };
-    reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: "Upload failed",
+        description: "There was a problem uploading your image",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
   
   const triggerFileUpload = () => {
     fileInputRef.current?.click();
   };
   
-  const handleSave = () => {
-    updateProfile({
-      ...profile,
-      name,
-      username,
-      about,
-      pronouns
-    });
+  const handleSave = async () => {
+    if (!user) return;
     
-    toast({
-      title: "Profile updated",
-      description: "Your profile has been updated successfully"
-    });
+    setLoading(true);
+    
+    try {
+      const updatedProfile = {
+        ...profile,
+        name,
+        username,
+        about,
+        pronouns
+      };
+      
+      // Save to Supabase
+      const savedProfile = await profileService.updateProfile(updatedProfile, user.id);
+      
+      if (savedProfile) {
+        // Update local state
+        updateProfileState(updatedProfile);
+        
+        toast({
+          title: "Profile updated",
+          description: "Your profile has been updated successfully"
+        });
+      }
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      toast({
+        title: "Update failed",
+        description: "There was a problem updating your profile",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
   
   return (
@@ -82,9 +151,19 @@ export const ProfileEditor = () => {
             size="sm" 
             onClick={triggerFileUpload}
             className="mt-2"
+            disabled={loading}
           >
-            <Upload className="mr-2 h-4 w-4" />
-            Upload Image
+            {loading ? (
+              <span className="flex items-center">
+                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin mr-2" />
+                Uploading...
+              </span>
+            ) : (
+              <>
+                <Upload className="mr-2 h-4 w-4" />
+                Upload Image
+              </>
+            )}
           </Button>
         </div>
         
@@ -97,6 +176,7 @@ export const ProfileEditor = () => {
                 value={name} 
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Your name"
+                disabled={loading}
               />
             </div>
             
@@ -107,6 +187,7 @@ export const ProfileEditor = () => {
                 value={username} 
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="username"
+                disabled={loading}
               />
             </div>
           </div>
@@ -119,6 +200,7 @@ export const ProfileEditor = () => {
               onChange={(e) => setAbout(e.target.value)}
               placeholder="Tell us about yourself"
               rows={4}
+              disabled={loading}
             />
           </div>
         </div>
@@ -130,6 +212,7 @@ export const ProfileEditor = () => {
           value={pronouns} 
           onValueChange={setPronouns}
           className="flex flex-wrap gap-4"
+          disabled={loading}
         >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="he/him" id="he-him" />
@@ -147,8 +230,15 @@ export const ProfileEditor = () => {
       </div>
       
       <div className="flex justify-end">
-        <Button onClick={handleSave}>
-          Save Changes
+        <Button onClick={handleSave} disabled={loading}>
+          {loading ? (
+            <span className="flex items-center">
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+              Saving...
+            </span>
+          ) : (
+            'Save Changes'
+          )}
         </Button>
       </div>
     </div>

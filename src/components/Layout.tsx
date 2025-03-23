@@ -1,12 +1,21 @@
 
 import React, { useEffect, useState } from 'react';
-import { useLocation, Link } from 'react-router-dom';
-import { Plus, Home, Library, Menu, X, User, PanelLeft } from 'lucide-react';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
+import { Plus, Home, Library, Menu, X, User, PanelLeft, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AnimatedTransition } from './AnimatedTransition';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProfileStore } from '@/lib/profile';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   SidebarProvider,
   Sidebar,
@@ -26,8 +35,10 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const profile = useProfileStore(state => state.profile);
+  const { user, signOut } = useAuth();
 
   // Navigation items
   const navItems = [
@@ -35,11 +46,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     { icon: Library, label: 'Library', path: '/library' },
   ];
 
-  useEffect(() => {
-    console.log(sidebarOpen);
-
-  }, [sidebarOpen])
-
+  // Handle logout
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/login');
+  };
 
   // Close sidebar when nav item is clicked
   const handleNavClick = () => {
@@ -94,28 +105,56 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
           <SidebarFooter>
             <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={location.pathname === '/profile'}
-                tooltip="Profile"
-                size="lg"
-              >
-                <Link to="/profile" className="flex items-center gap-3">
-                  <Avatar className="h-9 w-9">
-                    <AvatarImage src={profile.image} />
-                    <AvatarFallback>
-                      <User className="h-5 w-5" />
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col items-start text-left">
-                    <span className="font-medium">{profile.name || 'Your Profile'}</span>
-                    <span className="text-xs text-muted-foreground">{profile.username || 'Edit profile'}</span>
-                  </div>
-                </Link>
-              </SidebarMenuButton>
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={location.pathname === '/profile'}
+                      tooltip="Profile"
+                      size="lg"
+                    >
+                      <div className="flex items-center gap-3 cursor-pointer">
+                        <Avatar className="h-9 w-9">
+                          <AvatarImage src={profile.image} />
+                          <AvatarFallback>
+                            <User className="h-5 w-5" />
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col items-start text-left">
+                          <span className="font-medium">{profile.name || user.email?.split('@')[0] || 'Your Profile'}</span>
+                          <span className="text-xs text-muted-foreground">{profile.username || 'Edit profile'}</span>
+                        </div>
+                      </div>
+                    </SidebarMenuButton>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem onClick={() => navigate('/profile')}>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <SidebarMenuButton
+                  asChild
+                  tooltip="Login"
+                  size="lg"
+                >
+                  <Link to="/login" className="flex items-center gap-3">
+                    <Button>Login</Button>
+                  </Link>
+                </SidebarMenuButton>
+              )}
             </SidebarMenuItem>
           </SidebarFooter>
         </Sidebar>
+        
         {/* Mobile Sidebar (Animated Overlay) */}
         <AnimatePresence>
           {sidebarOpen && (
@@ -170,24 +209,46 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                     <Plus size={20} className="mr-3" />
                     <span>Add Media</span>
                   </Link>
-                  <Link
-                    to="/profile"
-                    className={cn(
-                      "flex items-center px-4 py-3 rounded-lg transition-all-200 mt-4",
-                      location.pathname === '/profile'
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-secondary"
-                    )}
-                    onClick={handleNavClick}
-                  >
-                    <Avatar className="h-7 w-7 mr-3">
-                      <AvatarImage src={profile.image} />
-                      <AvatarFallback>
-                        <User className="h-4 w-4" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <span>Profile</span>
-                  </Link>
+                  
+                  {user ? (
+                    <>
+                      <Link
+                        to="/profile"
+                        className={cn(
+                          "flex items-center px-4 py-3 rounded-lg transition-all-200 mt-4",
+                          location.pathname === '/profile'
+                            ? "bg-primary text-primary-foreground"
+                            : "hover:bg-secondary"
+                        )}
+                        onClick={handleNavClick}
+                      >
+                        <Avatar className="h-7 w-7 mr-3">
+                          <AvatarImage src={profile.image} />
+                          <AvatarFallback>
+                            <User className="h-4 w-4" />
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>Profile</span>
+                      </Link>
+                      
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center px-4 py-3 rounded-lg transition-all-200 hover:bg-secondary text-left"
+                      >
+                        <LogOut size={20} className="mr-3" />
+                        <span>Log out</span>
+                      </button>
+                    </>
+                  ) : (
+                    <Link
+                      to="/login"
+                      className="flex items-center px-4 py-3 rounded-lg transition-all-200 hover:bg-secondary mt-4"
+                      onClick={handleNavClick}
+                    >
+                      <User size={20} className="mr-3" />
+                      <span>Login</span>
+                    </Link>
+                  )}
                 </nav>
               </motion.aside>
             </>
