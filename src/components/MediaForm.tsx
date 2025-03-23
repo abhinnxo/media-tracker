@@ -27,30 +27,30 @@ interface MediaFormProps {
   onSuccess?: () => void;
 }
 
-export const MediaForm: React.FC<MediaFormProps> = ({ 
+export const MediaForm: React.FC<MediaFormProps> = ({
   initialData,
   onSuccess,
 }) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  
+
   // Form state
   const [formData, setFormData] = useState<Partial<MediaItem>>(
     initialData || {
       title: '',
-      description: '',
-      imageUrl: '',
+      description: null,
+      image_url: null,
       category: MediaCategory.MOVIE,
       status: MediaStatus.TO_CONSUME,
-      rating: undefined,
+      rating: null,
       tags: [],
-      startDate: undefined,
-      endDate: undefined,
-      notes: '',
+      start_date: null,
+      end_date: null,
+      notes: null,
     }
   );
-  
+
   // Handle input change
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -58,42 +58,42 @@ export const MediaForm: React.FC<MediaFormProps> = ({
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-  
+
   // Handle category change
   const handleCategoryChange = (value: MediaCategory) => {
     setFormData(prev => ({ ...prev, category: value }));
   };
-  
+
   // Handle status change
   const handleStatusChange = (value: MediaStatus) => {
     setFormData(prev => ({ ...prev, status: value }));
   };
-  
+
   // Handle rating change
   const handleRatingChange = (value: string) => {
-    const rating = value === 'no-rating' ? undefined : parseInt(value, 10);
+    const rating = value === 'no-rating' ? null : parseInt(value, 10);
     setFormData(prev => ({ ...prev, rating }));
   };
-  
+
   // Handle media search result selection
   const handleMediaSelect = (result: MediaSearchResult) => {
     setFormData(prev => ({
       ...prev,
       title: result.title,
-      imageUrl: result.imageUrl,
+      image_url: result.imageUrl,
       description: result.description,
       category: result.category,
     }));
-    
+
     toast({
       title: "Media info loaded",
       description: `${result.title} details have been loaded`,
     });
   };
-  
+
   // Handle tag input
   const [tagInput, setTagInput] = useState('');
-  
+
   const handleAddTag = () => {
     if (tagInput.trim() && !formData.tags?.includes(tagInput.trim())) {
       setFormData(prev => ({
@@ -103,39 +103,39 @@ export const MediaForm: React.FC<MediaFormProps> = ({
       setTagInput('');
     }
   };
-  
+
   const handleRemoveTag = (tag: string) => {
     setFormData(prev => ({
       ...prev,
       tags: prev.tags?.filter(t => t !== tag) || [],
     }));
   };
-  
+
   // Handle date changes
   const handleStartDateChange = (date: Date | undefined) => {
     setFormData(prev => ({
       ...prev,
-      startDate: date ? date.toISOString() : undefined,
+      start_date: date ? date.toISOString() : null,
     }));
   };
-  
+
   const handleEndDateChange = (date: Date | undefined) => {
     setFormData(prev => ({
       ...prev,
-      endDate: date ? date.toISOString() : undefined,
+      end_date: date ? date.toISOString() : null,
     }));
   };
-  
+
   // Format date for display
-  const formatDate = (dateString?: string) => {
+  const formatDate = (dateString: string | null) => {
     if (!dateString) return '';
     return format(new Date(dateString), 'PPP');
   };
-  
+
   // Form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.title || !formData.category || !formData.status) {
       toast({
         title: "Missing required fields",
@@ -144,20 +144,20 @@ export const MediaForm: React.FC<MediaFormProps> = ({
       });
       return;
     }
-    
+
     try {
       setIsLoading(true);
-      
+
       // Save the media item
       await mediaStore.save(formData as MediaItem);
-      
+
       toast({
         title: initialData ? "Media updated" : "Media added",
         description: initialData
           ? `${formData.title} has been updated successfully`
           : `${formData.title} has been added to your collection`,
       });
-      
+
       if (onSuccess) {
         onSuccess();
       } else {
@@ -174,7 +174,7 @@ export const MediaForm: React.FC<MediaFormProps> = ({
       setIsLoading(false);
     }
   };
-  
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
@@ -189,7 +189,7 @@ export const MediaForm: React.FC<MediaFormProps> = ({
             Search for media to auto-fill the form or enter details manually below
           </p>
         </div>
-        
+
         {/* Title */}
         <div className="space-y-2">
           <Label htmlFor="title">Title <span className="text-destructive">*</span></Label>
@@ -202,21 +202,21 @@ export const MediaForm: React.FC<MediaFormProps> = ({
             placeholder="Enter title"
           />
         </div>
-        
+
         {/* Image URL */}
         <div className="space-y-2">
-          <Label htmlFor="imageUrl">Image URL</Label>
+          <Label htmlFor="image_url">Image URL</Label>
           <Input
-            id="imageUrl"
-            name="imageUrl"
-            value={formData.imageUrl || ''}
+            id="image_url"
+            name="image_url"
+            value={formData.image_url || ''}
             onChange={handleChange}
             placeholder="https://example.com/image.jpg"
           />
-          {formData.imageUrl && (
+          {formData.image_url && (
             <div className="mt-2 w-24 h-32 rounded overflow-hidden border border-border">
               <img
-                src={formData.imageUrl}
+                src={formData.image_url}
                 alt="Preview"
                 className="w-full h-full object-cover"
                 onError={(e) => {
@@ -226,7 +226,7 @@ export const MediaForm: React.FC<MediaFormProps> = ({
             </div>
           )}
         </div>
-        
+
         {/* Category and Status */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Category */}
@@ -248,7 +248,7 @@ export const MediaForm: React.FC<MediaFormProps> = ({
               </SelectContent>
             </Select>
           </div>
-          
+
           {/* Status */}
           <div className="space-y-2">
             <Label htmlFor="status">Status <span className="text-destructive">*</span></Label>
@@ -260,32 +260,19 @@ export const MediaForm: React.FC<MediaFormProps> = ({
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={MediaStatus.TO_CONSUME}>To Watch/Read</SelectItem>
+                <SelectItem value={MediaStatus.TO_CONSUME}>To Consume</SelectItem>
                 <SelectItem value={MediaStatus.IN_PROGRESS}>In Progress</SelectItem>
                 <SelectItem value={MediaStatus.COMPLETED}>Completed</SelectItem>
-                <SelectItem value={MediaStatus.ON_HOLD}>On Hold</SelectItem>
                 <SelectItem value={MediaStatus.DROPPED}>Dropped</SelectItem>
+                <SelectItem value={MediaStatus.ON_HOLD}>On Hold</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
-        
-        {/* Description */}
-        <div className="space-y-2">
-          <Label htmlFor="description">Description</Label>
-          <Textarea
-            id="description"
-            name="description"
-            value={formData.description || ''}
-            onChange={handleChange}
-            placeholder="Enter a brief description"
-            rows={3}
-          />
-        </div>
-        
+
         {/* Rating */}
         <div className="space-y-2">
-          <Label htmlFor="rating">Rating (0-10)</Label>
+          <Label htmlFor="rating">Rating</Label>
           <Select
             value={formData.rating?.toString() || 'no-rating'}
             onValueChange={handleRatingChange}
@@ -295,62 +282,15 @@ export const MediaForm: React.FC<MediaFormProps> = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="no-rating">No Rating</SelectItem>
-              {[...Array(11)].map((_, i) => (
-                <SelectItem key={i} value={i.toString()}>
-                  {i} / 10
+              {[10, 9, 8, 7, 6, 5, 4, 3, 2, 1].map(num => (
+                <SelectItem key={num} value={num.toString()}>
+                  {num}/10
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
-        
-        {/* Tags */}
-        <div className="space-y-2">
-          <Label htmlFor="tags">Tags</Label>
-          <div className="flex items-center space-x-2">
-            <Input
-              id="tagInput"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              placeholder="Add a tag"
-              className="flex-1"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleAddTag();
-                }
-              }}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleAddTag}
-            >
-              Add
-            </Button>
-          </div>
-          
-          {formData.tags && formData.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-2">
-              {formData.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center bg-secondary px-2 py-1 rounded text-sm"
-                >
-                  {tag}
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveTag(tag)}
-                    className="ml-1 text-muted-foreground hover:text-foreground"
-                  >
-                    <X size={14} />
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-        
+
         {/* Dates */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Start Date */}
@@ -362,25 +302,24 @@ export const MediaForm: React.FC<MediaFormProps> = ({
                   variant="outline"
                   className={cn(
                     "w-full justify-start text-left font-normal",
-                    !formData.startDate && "text-muted-foreground"
+                    !formData.start_date && "text-muted-foreground"
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.startDate ? formatDate(formData.startDate) : "Select date"}
+                  {formData.start_date ? formatDate(formData.start_date) : "Pick a date"}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent className="w-auto p-0">
                 <Calendar
                   mode="single"
-                  selected={formData.startDate ? new Date(formData.startDate) : undefined}
+                  selected={formData.start_date ? new Date(formData.start_date) : undefined}
                   onSelect={handleStartDateChange}
                   initialFocus
-                  className="p-3 pointer-events-auto"
                 />
               </PopoverContent>
             </Popover>
           </div>
-          
+
           {/* End Date */}
           <div className="space-y-2">
             <Label>End Date</Label>
@@ -390,26 +329,38 @@ export const MediaForm: React.FC<MediaFormProps> = ({
                   variant="outline"
                   className={cn(
                     "w-full justify-start text-left font-normal",
-                    !formData.endDate && "text-muted-foreground"
+                    !formData.end_date && "text-muted-foreground"
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {formData.endDate ? formatDate(formData.endDate) : "Select date"}
+                  {formData.end_date ? formatDate(formData.end_date) : "Pick a date"}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent className="w-auto p-0">
                 <Calendar
                   mode="single"
-                  selected={formData.endDate ? new Date(formData.endDate) : undefined}
+                  selected={formData.end_date ? new Date(formData.end_date) : undefined}
                   onSelect={handleEndDateChange}
                   initialFocus
-                  className="p-3 pointer-events-auto"
                 />
               </PopoverContent>
             </Popover>
           </div>
         </div>
-        
+
+        {/* Description */}
+        <div className="space-y-2">
+          <Label htmlFor="description">Description</Label>
+          <Textarea
+            id="description"
+            name="description"
+            value={formData.description || ''}
+            onChange={handleChange}
+            placeholder="Enter description"
+            rows={4}
+          />
+        </div>
+
         {/* Notes */}
         <div className="space-y-2">
           <Label htmlFor="notes">Notes</Label>
@@ -418,19 +369,62 @@ export const MediaForm: React.FC<MediaFormProps> = ({
             name="notes"
             value={formData.notes || ''}
             onChange={handleChange}
-            placeholder="Add personal notes or thoughts"
+            placeholder="Enter any additional notes"
             rows={4}
           />
         </div>
+
+        {/* Tags */}
+        <div className="space-y-2">
+          <Label>Tags</Label>
+          <div className="flex gap-2">
+            <Input
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddTag();
+                }
+              }}
+              placeholder="Add a tag and press Enter"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleAddTag}
+            >
+              Add
+            </Button>
+          </div>
+          {formData.tags && formData.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {formData.tags.map(tag => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-secondary text-sm"
+                >
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveTag(tag)}
+                    className="hover:text-destructive"
+                  >
+                    <X size={14} />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-      
-      {/* Form Actions */}
-      <div className="flex justify-end space-x-2">
+
+      {/* Submit Button */}
+      <div className="flex justify-end gap-4">
         <Button
           type="button"
           variant="outline"
-          onClick={() => navigate(-1)}
-          disabled={isLoading}
+          onClick={() => navigate('/library')}
         >
           Cancel
         </Button>

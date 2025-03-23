@@ -26,13 +26,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  ArrowLeft, 
-  Edit, 
-  MoreVertical, 
-  Trash, 
-  Calendar, 
-  Tag, 
+import {
+  ArrowLeft,
+  Edit,
+  MoreVertical,
+  Trash,
+  Calendar,
+  Tag,
   MessageCircle,
   Star,
   Film,
@@ -52,11 +52,11 @@ const Details: React.FC = () => {
   const [mediaItem, setMediaItem] = useState<MediaItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  
+
   useEffect(() => {
     const fetchMediaItem = async () => {
       if (!id) return;
-      
+
       try {
         const item = await mediaStore.getById(id);
         if (item) {
@@ -75,13 +75,13 @@ const Details: React.FC = () => {
         setIsLoading(false);
       }
     };
-    
+
     fetchMediaItem();
   }, [id, navigate, toast]);
-  
+
   const handleDelete = async () => {
     if (!mediaItem) return;
-    
+
     try {
       await mediaStore.delete(mediaItem.id);
       toast({
@@ -98,10 +98,10 @@ const Details: React.FC = () => {
       });
     }
   };
-  
+
   const handleStatusChange = async (newStatus: MediaStatus) => {
     if (!mediaItem) return;
-    
+
     try {
       const updatedItem = { ...mediaItem, status: newStatus };
       await mediaStore.save(updatedItem);
@@ -119,7 +119,7 @@ const Details: React.FC = () => {
       });
     }
   };
-  
+
   const getStatusLabel = (status: MediaStatus): string => {
     switch (status) {
       case MediaStatus.TO_CONSUME:
@@ -136,10 +136,10 @@ const Details: React.FC = () => {
         return status;
     }
   };
-  
+
   const getCategoryIcon = () => {
     if (!mediaItem) return null;
-    
+
     switch (mediaItem.category) {
       case 'movie':
         return <Film size={18} />;
@@ -153,8 +153,8 @@ const Details: React.FC = () => {
         return <File size={18} />;
     }
   };
-  
-  const formatDate = (dateString?: string) => {
+
+  const formatDate = (dateString: string | null) => {
     if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -163,10 +163,10 @@ const Details: React.FC = () => {
       day: 'numeric',
     });
   };
-  
+
   const getCategoryLabel = () => {
     if (!mediaItem) return '';
-    
+
     switch (mediaItem.category) {
       case 'movie':
         return 'Movie';
@@ -182,7 +182,7 @@ const Details: React.FC = () => {
         return mediaItem.category;
     }
   };
-  
+
   if (isLoading) {
     return (
       <Layout>
@@ -192,7 +192,7 @@ const Details: React.FC = () => {
       </Layout>
     );
   }
-  
+
   if (!mediaItem) {
     return (
       <Layout>
@@ -208,25 +208,25 @@ const Details: React.FC = () => {
       </Layout>
     );
   }
-  
+
   return (
     <Layout>
       <div>
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate(-1)} 
+        <Button
+          variant="ghost"
+          onClick={() => navigate(-1)}
           className="mb-6"
         >
           <ArrowLeft size={18} className="mr-2" />
           Back
         </Button>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-[250px_1fr] gap-8">
           <AnimatedTransition variant="slideRight" className="order-2 md:order-1">
             <div className="rounded-xl overflow-hidden aspect-[2/3] bg-muted">
-              {mediaItem.imageUrl ? (
+              {mediaItem.image_url ? (
                 <img
-                  src={mediaItem.imageUrl}
+                  src={mediaItem.image_url}
                   alt={mediaItem.title}
                   className="w-full h-full object-cover"
                 />
@@ -237,7 +237,7 @@ const Details: React.FC = () => {
               )}
             </div>
           </AnimatedTransition>
-          
+
           <AnimatedTransition variant="slideUp" className="space-y-6 order-1 md:order-2">
             <div className="flex justify-between items-start">
               <div>
@@ -248,7 +248,7 @@ const Details: React.FC = () => {
                 <h1 className="text-3xl font-semibold mb-3">{mediaItem.title}</h1>
                 <StatusBadge status={mediaItem.status} size="lg" />
               </div>
-              
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon">
@@ -258,14 +258,14 @@ const Details: React.FC = () => {
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  
+
                   <DropdownMenuItem asChild>
                     <Link to={`/edit/${mediaItem.id}`} className="flex items-center">
                       <Edit size={16} className="mr-2" />
                       Edit
                     </Link>
                   </DropdownMenuItem>
-                  
+
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
@@ -291,14 +291,14 @@ const Details: React.FC = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            
+
             {mediaItem.description && (
               <div>
                 <h2 className="text-lg font-medium mb-2">Description</h2>
                 <p className="text-muted-foreground">{mediaItem.description}</p>
               </div>
             )}
-            
+
             {mediaItem.rating !== undefined && (
               <div>
                 <h2 className="flex items-center text-lg font-medium mb-2">
@@ -310,7 +310,7 @@ const Details: React.FC = () => {
                 </div>
               </div>
             )}
-            
+
             <div>
               <h2 className="text-lg font-medium mb-3">Change Status</h2>
               <div className="flex flex-wrap gap-2">
@@ -361,31 +361,28 @@ const Details: React.FC = () => {
                 </Button>
               </div>
             </div>
-            
+
             <div className="space-y-4">
-              {(mediaItem.startDate || mediaItem.endDate) && (
-                <div>
-                  <h2 className="flex items-center text-lg font-medium mb-2">
-                    <Calendar size={18} className="mr-2" />
-                    Dates
-                  </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {mediaItem.startDate && (
-                      <div>
-                        <div className="text-sm text-muted-foreground">Started</div>
-                        <div>{formatDate(mediaItem.startDate)}</div>
-                      </div>
-                    )}
-                    {mediaItem.endDate && (
-                      <div>
-                        <div className="text-sm text-muted-foreground">Finished</div>
-                        <div>{formatDate(mediaItem.endDate)}</div>
-                      </div>
-                    )}
-                  </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Calendar size={16} />
+                {mediaItem.start_date ? (
+                  <span>Started on {formatDate(mediaItem.start_date)}</span>
+                ) : mediaItem.end_date ? (
+                  <span>Completed on {formatDate(mediaItem.end_date)}</span>
+                ) : (
+                  <span>No dates set</span>
+                )}
+              </div>
+
+              {mediaItem.start_date && mediaItem.end_date && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Clock size={16} />
+                  <span>
+                    {formatDate(mediaItem.start_date)} - {formatDate(mediaItem.end_date)}
+                  </span>
                 </div>
               )}
-              
+
               {mediaItem.tags && mediaItem.tags.length > 0 && (
                 <div>
                   <h2 className="flex items-center text-lg font-medium mb-2">
@@ -404,7 +401,7 @@ const Details: React.FC = () => {
                   </div>
                 </div>
               )}
-              
+
               {mediaItem.notes && (
                 <div>
                   <h2 className="flex items-center text-lg font-medium mb-2">

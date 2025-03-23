@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
@@ -19,22 +18,19 @@ const Index: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Initialize storage with sample data if empty
-        mediaStore.initialize();
-        
         // Get all media items
         const allItems = await mediaStore.getAll();
-        
+
         // Currently watching/in progress
         const inProgress = await mediaStore.getByStatus(MediaStatus.IN_PROGRESS);
         setCurrentlyWatching(inProgress.slice(0, 6));
-        
-        // Recently added (all items, sorted by createdAt)
+
+        // Recently added (all items, sorted by created_at)
         const recent = [...allItems].sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
         setRecentlyAdded(recent.slice(0, 6));
-        
+
         // Up next (to consume)
         const next = await mediaStore.getByStatus(MediaStatus.TO_CONSUME);
         setUpNext(next.slice(0, 6));
@@ -87,7 +83,7 @@ const Index: React.FC = () => {
                   </Link>
                 </Button>
               </div>
-              
+
               {currentlyWatching.length > 0 ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
                   {currentlyWatching.map((item, index) => (
@@ -95,10 +91,10 @@ const Index: React.FC = () => {
                   ))}
                 </div>
               ) : (
-                <EmptyState 
-                  type="noItems" 
-                  title="Nothing In Progress" 
-                  description="Start watching or reading something new." 
+                <EmptyState
+                  type="noItems"
+                  title="Nothing In Progress"
+                  description="Start watching or reading something new."
                   actionLabel="Browse Your Library"
                   actionLink="/library"
                 />
@@ -118,7 +114,7 @@ const Index: React.FC = () => {
                   </Link>
                 </Button>
               </div>
-              
+
               {upNext.length > 0 ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
                   {upNext.map((item, index) => (
@@ -126,10 +122,10 @@ const Index: React.FC = () => {
                   ))}
                 </div>
               ) : (
-                <EmptyState 
-                  type="noItems" 
-                  title="Watchlist Empty" 
-                  description="Add some media to your watchlist." 
+                <EmptyState
+                  type="noItems"
+                  title="Watchlist Empty"
+                  description="Add some media to your watchlist."
                   actionLabel="Add Media"
                   actionLink="/add"
                 />
@@ -149,7 +145,7 @@ const Index: React.FC = () => {
                   </Link>
                 </Button>
               </div>
-              
+
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
                 {recentlyAdded.map((item, index) => (
                   <MediaCard key={item.id} item={item} delay={index} />

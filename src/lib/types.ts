@@ -1,4 +1,3 @@
-
 export enum MediaCategory {
   MOVIE = "movie",
   TV_SERIES = "tv-series",
@@ -18,17 +17,18 @@ export enum MediaStatus {
 export interface MediaItem {
   id: string;
   title: string;
-  description?: string;
-  imageUrl?: string;
+  description: string | null;
+  image_url: string | null;
   category: MediaCategory;
   status: MediaStatus;
-  rating?: number; // 0-10
+  rating: number | null;
   tags: string[];
-  startDate?: string;
-  endDate?: string;
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
+  start_date: string | null;
+  end_date: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
 }
 
 export interface MediaFilterOptions {

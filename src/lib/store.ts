@@ -1,144 +1,120 @@
 import { MediaItem, MediaCategory, MediaStatus } from './types';
-
-// Sample data for initial app state
-const sampleData: MediaItem[] = [
-  {
-    id: "1",
-    title: "Inception",
-    description: "A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O.",
-    imageUrl: "https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_.jpg",
-    category: MediaCategory.MOVIE,
-    status: MediaStatus.COMPLETED,
-    rating: 9,
-    tags: ["sci-fi", "thriller"],
-    startDate: "2023-01-15",
-    endDate: "2023-01-15",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: "2",
-    title: "Stranger Things",
-    description: "When a young boy disappears, his mother, a police chief, and his friends must confront terrifying supernatural forces in order to get him back.",
-    imageUrl: "https://m.media-amazon.com/images/M/MV5BMDZkYmVhNjMtNWU4MC00MDQxLWE3MjYtZGMzZWI1ZjhlOWJmXkEyXkFqcGdeQXVyMTkxNjUyNQ@@._V1_.jpg",
-    category: MediaCategory.TV_SERIES,
-    status: MediaStatus.IN_PROGRESS,
-    tags: ["horror", "sci-fi"],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: "3",
-    title: "Atomic Habits",
-    description: "An Easy & Proven Way to Build Good Habits & Break Bad Ones.",
-    imageUrl: "https://m.media-amazon.com/images/I/81YkqyaFVEL._AC_UF1000,1000_QL80_.jpg",
-    category: MediaCategory.BOOK,
-    status: MediaStatus.TO_CONSUME,
-    tags: ["self-help", "productivity"],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: "4",
-    title: "Attack on Titan",
-    description: "After his hometown is destroyed and his mother is killed, young Eren Jaeger vows to cleanse the earth of the giant humanoid Titans that have brought humanity to the brink of extinction.",
-    imageUrl: "https://m.media-amazon.com/images/M/MV5BNDFjYTIxMjctYTQ2ZC00OGQ4LWE3OGYtNDdiMzNiNDZlMDAwXkEyXkFqcGdeQXVyNzI3NjY3NjQ@._V1_FMjpg_UX1000_.jpg",
-    category: MediaCategory.ANIME,
-    status: MediaStatus.ON_HOLD,
-    rating: 8,
-    tags: ["action", "dark-fantasy"],
-    startDate: "2022-05-10",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: "5",
-    title: "Berserk",
-    description: "A former mercenary, now known as the Black Swordsman, seeks revenge.",
-    imageUrl: "https://m.media-amazon.com/images/M/MV5BYzA0MGU2MjgtYzNhZC00MDI0LWFmNjktODY2YjM5OGFkYmIwXkEyXkFqcGdeQXVyNTAyODkwOQ@@._V1_FMjpg_UX1000_.jpg",
-    category: MediaCategory.MANGA,
-    status: MediaStatus.DROPPED,
-    rating: 7,
-    tags: ["dark-fantasy", "action"],
-    startDate: "2022-03-10",
-    endDate: "2022-04-15",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }
-];
-
-// Helper to initialize storage
-const initializeStorage = (): void => {
-  const existingData = localStorage.getItem('media-items');
-  if (!existingData) {
-    localStorage.setItem('media-items', JSON.stringify(sampleData));
-  }
-};
+import { supabase } from './supabase';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Media Store API
 export const mediaStore = {
-  // Initialize with sample data if empty
-  initialize: (): void => {
-    initializeStorage();
-  },
-  
-  // Get all media items
+  // Get all media items for the current user
   getAll: async (): Promise<MediaItem[]> => {
-    initializeStorage();
-    const data = localStorage.getItem('media-items');
-    return data ? JSON.parse(data) : [];
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    const { data, error } = await supabase
+      .from('media_items')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
   },
   
   // Get a single media item by ID
   getById: async (id: string): Promise<MediaItem | undefined> => {
-    const items = await mediaStore.getAll();
-    return items.find(item => item.id === id);
+    const { data, error } = await supabase
+      .from('media_items')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+    return data || undefined;
   },
   
   // Get items by category
   getByCategory: async (category: MediaCategory): Promise<MediaItem[]> => {
-    const items = await mediaStore.getAll();
-    return items.filter(item => item.category === category);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    const { data, error } = await supabase
+      .from('media_items')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('category', category)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
   },
   
   // Get items by status
   getByStatus: async (status: MediaStatus): Promise<MediaItem[]> => {
-    const items = await mediaStore.getAll();
-    return items.filter(item => item.status === status);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    const { data, error } = await supabase
+      .from('media_items')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('status', status)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
   },
   
   // Save a media item (create or update)
   save: async (item: MediaItem): Promise<MediaItem> => {
-    const items = await mediaStore.getAll();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
     const now = new Date().toISOString();
     
     // If item has an ID, update it
     if (item.id) {
-      const updatedItem = { ...item, updatedAt: now };
-      const newItems = items.map(i => i.id === item.id ? updatedItem : i);
-      localStorage.setItem('media-items', JSON.stringify(newItems));
-      return updatedItem;
+      const { data, error } = await supabase
+        .from('media_items')
+        .update({ ...item, updated_at: now })
+        .eq('id', item.id)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
     }
     
     // Otherwise create a new item
     const newItem = { 
       ...item, 
       id: crypto.randomUUID(), 
-      createdAt: now, 
-      updatedAt: now 
+      created_at: now, 
+      updated_at: now,
+      user_id: user.id
     };
     
-    localStorage.setItem('media-items', JSON.stringify([...items, newItem]));
-    return newItem;
+    const { data, error } = await supabase
+      .from('media_items')
+      .insert(newItem)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
   },
   
   // Delete a media item
   delete: async (id: string): Promise<void> => {
-    const items = await mediaStore.getAll();
-    localStorage.setItem(
-      'media-items', 
-      JSON.stringify(items.filter(i => i.id !== id))
-    );
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    const { error } = await supabase
+      .from('media_items')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', user.id);
+
+    if (error) throw error;
   },
   
   // Search and filter items
@@ -148,31 +124,35 @@ export const mediaStore = {
     search?: string;
     tags?: string[];
   }): Promise<MediaItem[]> => {
-    let items = await mediaStore.getAll();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    let query = supabase
+      .from('media_items')
+      .select('*')
+      .eq('user_id', user.id);
     
     if (options.category) {
-      items = items.filter(item => item.category === options.category);
+      query = query.eq('category', options.category);
     }
     
     if (options.status) {
-      items = items.filter(item => item.status === options.status);
+      query = query.eq('status', options.status);
     }
     
     if (options.search) {
-      const searchLower = options.search.toLowerCase();
-      items = items.filter(item => 
-        item.title.toLowerCase().includes(searchLower) || 
-        item.description?.toLowerCase().includes(searchLower)
-      );
+      query = query.or(`title.ilike.%${options.search}%,description.ilike.%${options.search}%`);
     }
     
     if (options.tags && options.tags.length > 0) {
-      items = items.filter(item => 
-        options.tags!.some(tag => item.tags.includes(tag))
-      );
+      query = query.contains('tags', options.tags);
     }
+
+    query = query.order('created_at', { ascending: false });
     
-    return items;
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
   },
   
   // Export all data
@@ -183,9 +163,23 @@ export const mediaStore = {
   
   // Import data
   importData: async (data: string): Promise<void> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
     try {
       const items = JSON.parse(data);
-      localStorage.setItem('media-items', JSON.stringify(items));
+      const itemsWithUserId = items.map((item: MediaItem) => ({
+        ...item,
+        user_id: user.id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }));
+
+      const { error } = await supabase
+        .from('media_items')
+        .insert(itemsWithUserId);
+
+      if (error) throw error;
     } catch (error) {
       console.error('Error importing data:', error);
       throw new Error('Invalid data format');
@@ -194,8 +188,17 @@ export const mediaStore = {
   
   // Get all unique tags
   getAllTags: async (): Promise<string[]> => {
-    const items = await mediaStore.getAll();
-    const allTags = items.flatMap(item => item.tags);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    const { data, error } = await supabase
+      .from('media_items')
+      .select('tags')
+      .eq('user_id', user.id);
+
+    if (error) throw error;
+    
+    const allTags = data.flatMap(item => item.tags);
     return [...new Set(allTags)];
   }
 };
