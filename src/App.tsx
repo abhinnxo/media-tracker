@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Library from "./pages/Library";
 import AddEdit from "./pages/AddEdit";
 import Details from "./pages/Details";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import { AnimatePresence } from "framer-motion";
 
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/add" element={<AddEdit />} />
             <Route path="/edit/:id" element={<AddEdit />} />
             <Route path="/details/:id" element={<Details />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AnimatePresence>
