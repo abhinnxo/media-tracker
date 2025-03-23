@@ -8,7 +8,7 @@ import { MediaCard } from '@/components/MediaCard';
 import { toast } from '@/hooks/use-toast';
 import { Plus, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getAllItems } from '@/lib/store';
+import { mediaStore } from '@/lib/store';
 
 const MAX_SHOWCASE_ITEMS = 5;
 
@@ -22,7 +22,7 @@ export const ProfileShowcase = () => {
   // Fetch all media items
   useEffect(() => {
     const fetchMediaItems = async () => {
-      const items = await getAllItems();
+      const items = await mediaStore.getAll();
       setMediaItems(items);
       
       // Filter items that are in the showcase
@@ -98,11 +98,12 @@ export const ProfileShowcase = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {showcaseItems.map(item => (
               <div key={item.id} className="relative group">
-                <MediaCard 
-                  item={item} 
-                  href={`/details/${item.id}`}
-                  className="cursor-pointer"
-                />
+                <div onClick={() => navigate(`/details/${item.id}`)}>
+                  <MediaCard 
+                    item={item}
+                    delay={0}
+                  />
+                </div>
                 <Button
                   className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
                   size="icon"
@@ -140,11 +141,12 @@ export const ProfileShowcase = () => {
                 .slice(0, 6)
                 .map(item => (
                   <div key={item.id} className="relative group">
-                    <MediaCard 
-                      item={item} 
-                      href={`/details/${item.id}`}
-                      className="cursor-pointer"
-                    />
+                    <div onClick={() => navigate(`/details/${item.id}`)}>
+                      <MediaCard 
+                        item={item}
+                        delay={0}
+                      />
+                    </div>
                     <Button
                       className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
                       size="sm"
