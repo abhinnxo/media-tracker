@@ -18,7 +18,7 @@ const Register: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   
-  const { signUp } = useAuth();
+  const { signUp, signIn } = useAuth();
   const navigate = useNavigate();
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,12 +46,31 @@ const Register: React.FC = () => {
     }
     
     try {
-      const { error } = await signUp(email, password);
+      const { error: signUpError } = await signUp(email, password);
       
-      if (error) {
-        setError(error.message);
+      if (signUpError) {
+        if (signUpError.message.includes('already registered')) {
+          // If user already exists, try to sign in
+          const { error: signInError } = await signIn(email, password);
+          if (signInError) {
+            setError(signInError.message);
+          } else {
+            // Successfully logged in, redirect to onboarding
+            navigate('/onboarding');
+          }
+        } else {
+          setError(signUpError.message);
+        }
       } else {
-        setSuccess(true);
+        // For development without email verification
+        const { error: signInError } = await signIn(email, password);
+        if (!signInError) {
+          // Successfully registered and logged in, redirect to onboarding
+          navigate('/onboarding');
+        } else {
+          // Regular success message for production with email verification
+          setSuccess(true);
+        }
       }
     } catch (err) {
       setError('An unexpected error occurred');

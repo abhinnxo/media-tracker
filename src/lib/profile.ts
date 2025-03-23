@@ -14,6 +14,7 @@ export interface Profile {
   image?: string;
   pronouns?: string;
   theme?: string;
+  website?: string;
   showcaseIds?: string[];
   socialLinks?: ProfileSocialLink[];
 }

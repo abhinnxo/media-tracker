@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Session, User, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
   session: Session | null;
@@ -21,12 +22,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Check if user has completed onboarding
+  const checkOnboarding = async (userId: string) => {
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('user_id', userId)
+        .single();
+      
+      // If no profile or no username, redirect to onboarding
+      if (!data || !data.username) {
+        const currentPath = window.location.pathname;
+        // Only redirect if not already on onboarding or auth pages
+        if (
+          currentPath !== '/onboarding' && 
+          !currentPath.startsWith('/login') && 
+          !currentPath.startsWith('/register') && 
+          !currentPath.startsWith('/reset-password') && 
+          !currentPath.startsWith('/update-password')
+        ) {
+          window.location.href = '/onboarding';
+        }
+      }
+    } catch (error) {
+      console.error('Error checking onboarding status:', error);
+    }
+  };
 
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        checkOnboarding(session.user.id);
+      }
+      
       setLoading(false);
     });
 
@@ -35,6 +69,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('Auth event:', event);
       setSession(session);
       setUser(session?.user ?? null);
+      
+      if (event === 'SIGNED_IN' && session?.user) {
+        checkOnboarding(session.user.id);
+      }
+      
       setLoading(false);
     });
 

@@ -24,6 +24,7 @@ export const dbProfileToAppProfile = (dbProfile: DbProfile): Profile => {
     about: dbProfile.about || undefined,
     pronouns: dbProfile.pronouns || undefined,
     theme: dbProfile.theme || undefined,
+    website: dbProfile.website || undefined,
   };
 };
 
@@ -37,6 +38,7 @@ export const appProfileToDbProfile = (profile: Profile, userId: string): Partial
     about: profile.about || null,
     pronouns: profile.pronouns || null,
     theme: profile.theme || null,
+    website: profile.website || null,
     updated_at: new Date().toISOString(),
   };
 };
@@ -58,6 +60,26 @@ export const profileService = {
       return data ? dbProfileToAppProfile(data as DbProfile) : null;
     } catch (error) {
       console.error('Error in getProfile:', error);
+      return null;
+    }
+  },
+
+  async getProfileByUsername(username: string): Promise<Profile | null> {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('username', username)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile by username:', error);
+        return null;
+      }
+
+      return data ? dbProfileToAppProfile(data as DbProfile) : null;
+    } catch (error) {
+      console.error('Error in getProfileByUsername:', error);
       return null;
     }
   },
@@ -128,6 +150,26 @@ export const profileService = {
     } catch (error) {
       console.error('Error in uploadAvatar:', error);
       return null;
+    }
+  },
+
+  async checkUsernameAvailability(username: string): Promise<boolean> {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', username)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error checking username:', error);
+        return false;
+      }
+
+      return !data; // Username is available if no data was returned
+    } catch (error) {
+      console.error('Error in checkUsernameAvailability:', error);
+      return false;
     }
   }
 };

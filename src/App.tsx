@@ -15,6 +15,8 @@ import AddEdit from "./pages/AddEdit";
 import Details from "./pages/Details";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import Onboarding from "./pages/Onboarding";
+import UserProfile from "./pages/user/[username]";
 
 // Auth Pages
 import Login from "./pages/Auth/Login";
@@ -39,6 +41,7 @@ const App = () => (
               <Route path="/register" element={<Register />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/update-password" element={<UpdatePassword />} />
+              <Route path="/user/:username" element={<UserProfile />} />
               
               {/* Protected routes */}
               <Route path="/library" element={
@@ -64,6 +67,11 @@ const App = () => (
               <Route path="/profile" element={
                 <ProtectedRoute>
                   <Profile />
+                </ProtectedRoute>
+              } />
+              <Route path="/onboarding" element={
+                <ProtectedRoute>
+                  <Onboarding />
                 </ProtectedRoute>
               } />
               
