@@ -4,6 +4,7 @@ import { Session, User, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { friendsService } from '@/lib/friends-service';
 
 interface AuthContextType {
   session: Session | null;
@@ -51,6 +52,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Update online status
+  const updatePresence = async (userId: string, isOnline: boolean) => {
+    if (userId) {
+      try {
+        await friendsService.updateUserPresence(userId, isOnline);
+      } catch (error) {
+        console.error('Error updating presence:', error);
+      }
+    }
+  };
+  
+  // Set up user online status tracking
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (user) {
+        updatePresence(user.id, !document.hidden);
+      }
+    };
+
+    const handleOnline = () => {
+      if (user) {
+        updatePresence(user.id, true);
+      }
+    };
+
+    const handleOffline = () => {
+      if (user) {
+        updatePresence(user.id, false);
+      }
+    };
+
+    // Set up event listeners for online/offline and visibility changes
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Mark user as online when mounting component
+    if (user) {
+      updatePresence(user.id, true);
+    }
+
+    // Handle cleanup when component unmounts or user changes
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+
+      // Mark user as offline when unmounting
+      if (user) {
+        updatePresence(user.id, false);
+      }
+    };
+  }, [user]);
+
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -59,6 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (session?.user) {
         checkOnboarding(session.user.id);
+        updatePresence(session.user.id, true);
       }
       
       setLoading(false);
@@ -72,6 +128,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (event === 'SIGNED_IN' && session?.user) {
         checkOnboarding(session.user.id);
+        updatePresence(session.user.id, true);
+      }
+      
+      if (event === 'SIGNED_OUT') {
+        // No need to update presence here as the old user is already set to null
       }
       
       setLoading(false);
@@ -125,6 +186,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
+    // Mark user as offline before signing out
+    if (user) {
+      await updatePresence(user.id, false);
+    }
+    
     await supabase.auth.signOut();
     toast({
       title: "Logged out",

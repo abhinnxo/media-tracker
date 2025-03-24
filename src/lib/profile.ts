@@ -17,6 +17,7 @@ export interface Profile {
   website?: string;
   showcaseIds?: string[];
   socialLinks?: ProfileSocialLink[];
+  friendsCount?: number;
 }
 
 interface ProfileState {

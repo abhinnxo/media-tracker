@@ -18,6 +18,11 @@ import NotFound from "./pages/NotFound";
 import Onboarding from "./pages/Onboarding";
 import UserProfile from "./pages/user/[username]";
 
+// New Pages
+import Friends from "./pages/Friends";
+import Messages from "./pages/Messages";
+import Conversation from "./pages/Conversation";
+
 // Auth Pages
 import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
@@ -72,6 +77,23 @@ const App = () => (
               <Route path="/onboarding" element={
                 <ProtectedRoute>
                   <Onboarding />
+                </ProtectedRoute>
+              } />
+              
+              {/* New routes for friendship and messaging */}
+              <Route path="/friends" element={
+                <ProtectedRoute>
+                  <Friends />
+                </ProtectedRoute>
+              } />
+              <Route path="/messages" element={
+                <ProtectedRoute>
+                  <Messages />
+                </ProtectedRoute>
+              } />
+              <Route path="/messages/:partnerId" element={
+                <ProtectedRoute>
+                  <Conversation />
                 </ProtectedRoute>
               } />
               
