@@ -1,3 +1,4 @@
+
 import { supabase } from './supabase';
 import { toast } from '@/hooks/use-toast';
 
@@ -134,9 +135,9 @@ export const friendsService = {
         .from('profiles')
         .select('user_id')
         .eq('username', friendUsername)
-        .single();
+        .maybeSingle();
       
-      if (profileError) {
+      if (profileError || !friendProfile) {
         console.error('Profile error:', profileError);
         toast({
           title: "User not found",
