@@ -1,7 +1,6 @@
-
 import React, { useEffect, useState } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { Plus, Home, Library, Menu, X, User, PanelLeft, LogOut } from 'lucide-react';
+import { Plus, Home, Library, Menu, X, User, PanelLeft, LogOut, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AnimatedTransition } from './AnimatedTransition';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -44,6 +43,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navItems = [
     { icon: Home, label: 'Home', path: '/' },
     { icon: Library, label: 'Library', path: '/library' },
+    { icon: User, label: 'Friends', path: '/friends' },
+    { icon: MessageSquare, label: 'Messages', path: '/messages' },
   ];
 
   // Handle logout
@@ -61,7 +62,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="flex mx-auto h-screen bg-background">
+      <div className="flex w-full h-screen bg-background">
         {/* Desktop Sidebar - Using shadcn/ui sidebar */}
         <Sidebar variant="sidebar" collapsible="icon">
           <SidebarHeader>
@@ -154,7 +155,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             </SidebarMenuItem>
           </SidebarFooter>
         </Sidebar>
-        
+
         {/* Mobile Sidebar (Animated Overlay) */}
         <AnimatePresence>
           {sidebarOpen && (
@@ -209,7 +210,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                     <Plus size={20} className="mr-3" />
                     <span>Add Media</span>
                   </Link>
-                  
+
                   {user ? (
                     <>
                       <Link
@@ -230,7 +231,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                         </Avatar>
                         <span>Profile</span>
                       </Link>
-                      
+
                       <button
                         onClick={handleLogout}
                         className="w-full flex items-center px-4 py-3 rounded-lg transition-all-200 hover:bg-secondary text-left"
@@ -266,7 +267,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               <Menu size={24} />
             </button>
           </div>
-          <AnimatedTransition variant="fadeIn" className="px-4 py-6 md:px-6 md:py-8 container mx-auto max-w-4xl">
+          <AnimatedTransition variant="fadeIn" className="px-4 py-6 md:px-6 md:py-8 container mx-auto">
             {children}
           </AnimatedTransition>
         </main>

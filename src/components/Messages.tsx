@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -7,40 +6,41 @@ import { friendsService } from '@/lib/friends-service';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
-import { 
-  User, 
-  MessageCircle, 
-  Search, 
-  ArrowLeft, 
-  Send, 
-  MoreVertical, 
-  Trash2, 
-  Reply, 
+import {
+  User,
+  MessageCircle,
+  Search,
+  ArrowLeft,
+  Send,
+  MoreVertical,
+  Trash2,
+  Reply,
   UserX,
   CircleSlash,
   Clock,
   Check,
-  CheckCheck
+  CheckCheck,
+  X
 } from 'lucide-react';
 import { format, isToday, isYesterday } from 'date-fns';
 
@@ -61,12 +61,12 @@ export const Messages = () => {
   const conversationsRef = useRef<HTMLDivElement>(null);
   const messageSubscriptionRef = useRef<any>(null);
   const presenceChannelRef = useRef<any>(null);
-  
+
   // Load conversations on component mount
   useEffect(() => {
     if (user) {
       loadConversations();
-      
+
       // Subscribe to new messages
       messageSubscriptionRef.current = messagesService.subscribeToMessages(
         user.id,
@@ -78,7 +78,7 @@ export const Messages = () => {
               .from('messages')
               .update({ is_read: true })
               .eq('id', newMessage.id);
-            
+
             // Add to messages list
             loadMessages(partnerId);
           } else {
@@ -87,10 +87,10 @@ export const Messages = () => {
           }
         }
       );
-      
+
       // Set up presence for online status
       setupPresence();
-      
+
       // Cleanup
       return () => {
         if (messageSubscriptionRef.current) {
@@ -102,25 +102,25 @@ export const Messages = () => {
       };
     }
   }, [user]);
-  
+
   // Load messages when partnerId changes
   useEffect(() => {
     if (user && partnerId) {
       loadMessages(partnerId);
     }
   }, [user, partnerId]);
-  
+
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-  
+
   const setupPresence = () => {
     if (!user) return;
-    
+
     // Update user's online status
     friendsService.updateUserPresence(user.id, true);
-    
+
     // Create presence channel
     presenceChannelRef.current = supabase.channel('online-users')
       .on('presence', { event: 'sync' }, () => {
@@ -143,32 +143,32 @@ export const Messages = () => {
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
           // Track presence for current user
-          await presenceChannelRef.current.track({ 
+          await presenceChannelRef.current.track({
             user_id: user.id,
-            online_at: new Date().toISOString() 
+            online_at: new Date().toISOString()
           });
         }
       });
-      
+
     // Set up handler for page unload to mark user as offline
     const handleUnload = () => {
       friendsService.updateUserPresence(user.id, false);
     };
-    
+
     window.addEventListener('beforeunload', handleUnload);
-    
+
     return () => {
       window.removeEventListener('beforeunload', handleUnload);
       friendsService.updateUserPresence(user.id, false);
     };
   };
-  
+
   const loadConversations = async () => {
     setLoading(true);
     try {
       const conversationsData = await messagesService.getConversations(user!.id);
       setConversations(conversationsData);
-      
+
       // If we have a partnerId, find that conversation
       if (partnerId) {
         const currentPartner = conversationsData.find(c => c.user_id === partnerId);
@@ -185,12 +185,12 @@ export const Messages = () => {
       setLoading(false);
     }
   };
-  
+
   const loadMessages = async (partnerId: string) => {
     try {
       const messagesData = await messagesService.getMessages(user!.id, partnerId);
       setMessages(messagesData);
-      
+
       // Refresh conversations to update unread count
       loadConversations();
     } catch (error) {
@@ -202,19 +202,19 @@ export const Messages = () => {
       });
     }
   };
-  
+
   const handleSendMessage = async () => {
     if (!messageInput.trim() || !partnerId) return;
-    
+
     setSendingMessage(true);
     try {
       const success = await messagesService.sendMessage(
-        user!.id, 
-        partnerId, 
+        user!.id,
+        partnerId,
         messageInput,
         replyingTo?.id
       );
-      
+
       if (success) {
         setMessageInput('');
         setReplyingTo(null);
@@ -231,7 +231,7 @@ export const Messages = () => {
       setSendingMessage(false);
     }
   };
-  
+
   const handleDeleteMessage = async (messageId: string) => {
     try {
       const success = await messagesService.deleteMessage(messageId, user!.id);
@@ -247,10 +247,10 @@ export const Messages = () => {
       });
     }
   };
-  
+
   const handleBlockUser = async (userId: string) => {
     if (!partnerId) return;
-    
+
     try {
       const success = await friendsService.blockUser(user!.id, userId);
       if (success) {
@@ -269,24 +269,24 @@ export const Messages = () => {
       });
     }
   };
-  
+
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessageInput(e.target.value);
-    
+
     // Handle typing indicator logic
     if (typingTimeout) {
       clearTimeout(typingTimeout);
     }
-    
+
     // Set a timeout to clear the typing indicator after 2 seconds of inactivity
     const timeout = setTimeout(() => {
       // Here we would send an event to indicate user stopped typing
       // For now this is just a placeholder
     }, 2000);
-    
+
     setTypingTimeout(timeout);
   };
-  
+
   const formatMessageDate = (dateString: string) => {
     const date = new Date(dateString);
     if (isToday(date)) {
@@ -297,7 +297,7 @@ export const Messages = () => {
       return format(date, 'MMM d');
     }
   };
-  
+
   const formatMessageGroup = (dateString: string) => {
     const date = new Date(dateString);
     if (isToday(date)) {
@@ -308,9 +308,9 @@ export const Messages = () => {
       return format(date, 'MMMM d, yyyy');
     }
   };
-  
+
   // Group messages by date
-  const groupedMessages = messages.reduce<{[key: string]: MessageWithSender[]}>((groups, message) => {
+  const groupedMessages = messages.reduce<{ [key: string]: MessageWithSender[] }>((groups, message) => {
     const date = new Date(message.created_at).toLocaleDateString();
     if (!groups[date]) {
       groups[date] = [];
@@ -318,13 +318,13 @@ export const Messages = () => {
     groups[date].push(message);
     return groups;
   }, {});
-  
+
   // Find the replied-to message for rendering replies
   const findRepliedMessage = (replyId: string | null) => {
     if (!replyId) return null;
     return messages.find(msg => msg.id === replyId);
   };
-  
+
   if (!user) {
     return (
       <div className="text-center py-10">
@@ -332,16 +332,16 @@ export const Messages = () => {
       </div>
     );
   }
-  
+
   return (
-    <div className="container mx-auto py-6 h-[calc(100vh-6rem)]">
+    <div className="h-[calc(100vh-4rem)]">
       <div className="flex h-full rounded-lg overflow-hidden border">
         {/* Conversations sidebar */}
         <div className={`w-full md:w-1/3 lg:w-1/4 border-r ${partnerId ? 'hidden md:block' : ''}`}>
           <div className="p-4 border-b">
             <h2 className="text-lg font-semibold">Messages</h2>
           </div>
-          
+
           {loading && !conversations.length ? (
             <div className="flex justify-center py-10">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
@@ -350,11 +350,10 @@ export const Messages = () => {
             <ScrollArea className="h-[calc(100%-4rem)]" ref={conversationsRef}>
               {conversations.length > 0 ? (
                 conversations.map(conversation => (
-                  <div 
+                  <div
                     key={conversation.user_id}
-                    className={`p-4 border-b hover:bg-muted/50 cursor-pointer transition-colors ${
-                      partnerId === conversation.user_id ? 'bg-muted' : ''
-                    }`}
+                    className={`p-4 border-b hover:bg-muted/50 cursor-pointer transition-colors ${partnerId === conversation.user_id ? 'bg-muted' : ''
+                      }`}
                     onClick={() => navigate(`/messages/${conversation.user_id}`)}
                   >
                     <div className="flex items-start gap-3">
@@ -401,7 +400,7 @@ export const Messages = () => {
             </ScrollArea>
           )}
         </div>
-        
+
         {/* Message content area */}
         {partnerId ? (
           <div className="flex-1 flex flex-col">
@@ -438,7 +437,7 @@ export const Messages = () => {
                   </>
                 )}
               </div>
-              
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon">
@@ -450,7 +449,7 @@ export const Messages = () => {
                     <User className="mr-2 h-4 w-4" />
                     View Profile
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     onClick={() => handleBlockUser(partnerId)}
                     className="text-destructive"
                   >
@@ -460,7 +459,7 @@ export const Messages = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            
+
             {/* Messages */}
             <ScrollArea className="flex-1 p-4">
               {loading ? (
@@ -480,10 +479,10 @@ export const Messages = () => {
                         {msgs.map(message => {
                           const isCurrentUser = message.sender_id === user.id;
                           const repliedMessage = findRepliedMessage(message.reply_to);
-                          
+
                           return (
-                            <div 
-                              key={message.id} 
+                            <div
+                              key={message.id}
                               className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
                             >
                               <div className={`max-w-[75%] ${isCurrentUser ? 'order-2' : 'order-1'}`}>
@@ -496,32 +495,30 @@ export const Messages = () => {
                                     <span className="text-xs font-medium">{message.sender.username}</span>
                                   </div>
                                 )}
-                                
-                                <div className={`relative group rounded-lg px-4 py-2 ${
-                                  isCurrentUser 
-                                    ? 'bg-primary text-primary-foreground' 
-                                    : 'bg-muted'
-                                }`}>
+
+                                <div className={`relative group rounded-lg px-4 py-2 ${isCurrentUser
+                                  ? 'bg-primary text-primary-foreground'
+                                  : 'bg-muted'
+                                  }`}>
                                   {repliedMessage && (
-                                    <div className={`text-xs p-2 mb-1 rounded ${
-                                      isCurrentUser 
-                                        ? 'bg-primary-foreground/10 text-primary-foreground/90' 
-                                        : 'bg-background text-muted-foreground'
-                                    }`}>
+                                    <div className={`text-xs p-2 mb-1 rounded ${isCurrentUser
+                                      ? 'bg-primary-foreground/10 text-primary-foreground/90'
+                                      : 'bg-background text-muted-foreground'
+                                      }`}>
                                       <div className="flex items-center gap-1 mb-1">
                                         <Reply className="h-3 w-3" />
                                         <span className="font-medium">
-                                          {repliedMessage.sender_id === user.id 
-                                            ? 'You' 
+                                          {repliedMessage.sender_id === user.id
+                                            ? 'You'
                                             : repliedMessage.sender.username}
                                         </span>
                                       </div>
                                       <p className="truncate">{repliedMessage.content}</p>
                                     </div>
                                   )}
-                                  
+
                                   <p>{message.content}</p>
-                                  
+
                                   <div className={`absolute ${isCurrentUser ? '-left-16' : '-right-16'} top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity`}>
                                     <div className="flex items-center gap-1">
                                       <Button
@@ -544,7 +541,7 @@ export const Messages = () => {
                                       )}
                                     </div>
                                   </div>
-                                  
+
                                   <div className="text-xs text-right mt-1">
                                     <span className={isCurrentUser ? 'text-primary-foreground/70' : 'text-muted-foreground'}>
                                       {format(new Date(message.created_at), 'h:mm a')}
@@ -567,7 +564,7 @@ export const Messages = () => {
                       </div>
                     </div>
                   ))}
-                  
+
                   {isPartnerTyping && (
                     <div className="flex justify-start">
                       <div className="bg-muted rounded-lg px-4 py-2 text-sm">
@@ -579,7 +576,7 @@ export const Messages = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   <div ref={messagesEndRef} />
                 </div>
               ) : (
@@ -588,7 +585,7 @@ export const Messages = () => {
                 </div>
               )}
             </ScrollArea>
-            
+
             {/* Reply preview */}
             {replyingTo && (
               <div className="border-t p-2 flex items-center justify-between bg-muted/50">
@@ -611,7 +608,7 @@ export const Messages = () => {
                 </Button>
               </div>
             )}
-            
+
             {/* Input area */}
             <div className="p-4 border-t">
               <div className="flex gap-2">
@@ -627,8 +624,8 @@ export const Messages = () => {
                     }
                   }}
                 />
-                <Button 
-                  size="icon" 
+                <Button
+                  size="icon"
                   onClick={handleSendMessage}
                   disabled={!messageInput.trim() || sendingMessage}
                 >
