@@ -136,8 +136,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Log out</span>
+                      <LogOut className="mr-2 h-4 w-4 text-red-500" />
+                      <span className='text-red-500'>Log out</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -241,8 +241,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                         onClick={handleLogout}
                         className="w-full flex items-center px-4 py-3 rounded-lg transition-all-200 hover:bg-secondary text-left"
                       >
-                        <LogOut size={20} className="mr-3" />
-                        <span>Log out</span>
+                        <LogOut size={20} className="mr-3 text-red-500" />
+                        <span className='text-red-500'>Log out</span>
                       </button>
                     </>
                   ) : (
