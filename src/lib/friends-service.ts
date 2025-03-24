@@ -1,4 +1,3 @@
-
 import { supabase } from './supabase';
 import { toast } from '@/hooks/use-toast';
 
@@ -130,6 +129,7 @@ export const friendsService = {
   async sendFriendRequest(userId: string, friendUsername: string): Promise<boolean> {
     try {
       // First, get the friend's user ID from their username
+      console.log('Searching for username:', friendUsername);
       const { data: friendProfile, error: profileError } = await supabase
         .from('profiles')
         .select('user_id')
@@ -137,9 +137,20 @@ export const friendsService = {
         .single();
       
       if (profileError) {
+        console.error('Profile error:', profileError);
         toast({
           title: "User not found",
           description: "Could not find a user with that username",
+          variant: "destructive"
+        });
+        return false;
+      }
+      
+      // Check if trying to add yourself
+      if (friendProfile.user_id === userId) {
+        toast({
+          title: "Cannot add yourself",
+          description: "You cannot send a friend request to yourself",
           variant: "destructive"
         });
         return false;
@@ -408,7 +419,7 @@ export const friendsService = {
         avatar_url: profile.avatar_url,
         online_status: false,
         last_active: null,
-        status: 'blocked' as 'blocked'
+        status: 'blocked' as const
       }));
     } catch (error) {
       console.error('Error fetching blocked users:', error);
