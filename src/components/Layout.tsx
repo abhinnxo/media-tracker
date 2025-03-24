@@ -204,7 +204,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   ))}
                   <Link
                     to="/add"
-                    className="flex items-center px-4 py-3 rounded-lg transition-all-200 hover:bg-secondary"
+                    className={cn(
+                      "flex items-center px-4 py-3 rounded-lg transition-all-200",
+                      location.pathname === '/add'
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-secondary"
+                    )}
                     onClick={handleNavClick}
                   >
                     <Plus size={20} className="mr-3" />
