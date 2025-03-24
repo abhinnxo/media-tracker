@@ -1,4 +1,3 @@
-
 import { supabase } from './supabase';
 import { MediaItem, MediaCategory, MediaStatus, MediaFilterOptions } from './types';
 
@@ -8,16 +7,16 @@ const convertDbToAppItem = (dbItem: any): MediaItem => {
     id: dbItem.id,
     title: dbItem.title,
     description: dbItem.description || undefined,
-    imageUrl: dbItem.image_url || undefined,
+    image_url: dbItem.image_url || undefined,
     category: dbItem.category as MediaCategory,
     status: dbItem.status as MediaStatus,
     rating: dbItem.rating || undefined,
     tags: dbItem.tags || [],
-    startDate: dbItem.start_date || undefined,
-    endDate: dbItem.end_date || undefined,
+    start_date: dbItem.start_date || undefined,
+    end_date: dbItem.end_date || undefined,
     notes: dbItem.notes || undefined,
-    createdAt: dbItem.created_at,
-    updatedAt: dbItem.updated_at
+    created_at: dbItem.created_at,
+    updated_at: dbItem.updated_at
   };
 };
 
@@ -27,15 +26,15 @@ const convertAppToDbItem = (item: MediaItem, userId: string): any => {
     id: item.id,
     title: item.title,
     description: item.description || null,
-    image_url: item.imageUrl || null,
+    image_url: item.image_url || null,
     category: item.category,
     status: item.status,
     rating: item.rating || null,
     tags: item.tags || [],
-    start_date: item.startDate || null,
-    end_date: item.endDate || null,
+    start_date: item.start_date || null,
+    end_date: item.end_date || null,
     notes: item.notes || null,
-    created_at: item.createdAt,
+    created_at: item.created_at,
     updated_at: new Date().toISOString(),
     user_id: userId
   };
@@ -123,8 +122,8 @@ export const supabaseStore = {
     const dbItem = convertAppToDbItem(
       { 
         ...item, 
-        updatedAt: now,
-        createdAt: item.createdAt || now
+        updated_at: now,
+        created_at: item.created_at || now
       },
       userId
     );

@@ -1,4 +1,3 @@
-
 import { supabase } from './supabase';
 import { toast } from '@/hooks/use-toast';
 
@@ -18,7 +17,7 @@ export interface FriendProfile {
   avatar_url: string | null;
   online_status: boolean;
   last_active: string | null;
-  status: 'pending' | 'accepted' | 'blocked';
+  status: 'pending' | 'accepted' | 'blocked' | 'suggestion' | 'none';
 }
 
 export const friendsService = {

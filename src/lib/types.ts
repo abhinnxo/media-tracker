@@ -1,3 +1,4 @@
+
 export enum MediaCategory {
   MOVIE = "movie",
   TV_SERIES = "tv-series",
