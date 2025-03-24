@@ -25,6 +25,7 @@ export const friendsService = {
   // Get all friends and their profiles
   async getFriends(userId: string): Promise<FriendProfile[]> {
     try {
+      console.log('Getting friends for user ID:', userId);
       // Get accepted friendships where the user is either the requester or the recipient
       const { data: friendships, error } = await supabase
         .from('friendships')
@@ -32,7 +33,12 @@ export const friendsService = {
         .or(`user_id.eq.${userId},friend_id.eq.${userId}`)
         .eq('status', 'accepted');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error getting friendships:', error);
+        throw error;
+      }
+      
+      console.log('Friendships found:', friendships?.length || 0);
       
       if (!friendships?.length) return [];
       
@@ -44,10 +50,15 @@ export const friendsService = {
       // Get profiles for these friends
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, username, full_name, avatar_url')
+        .select('user_id, username, full_name, avatar_url')
         .in('user_id', friendIds);
       
-      if (profilesError) throw profilesError;
+      if (profilesError) {
+        console.error('Error getting profiles:', profilesError);
+        throw profilesError;
+      }
+      
+      console.log('Profiles found:', profiles?.length || 0);
       
       // Get online status
       const { data: presence, error: presenceError } = await supabase
@@ -55,18 +66,22 @@ export const friendsService = {
         .select('user_id, online_status, last_active')
         .in('user_id', friendIds);
       
-      if (presenceError) throw presenceError;
+      if (presenceError) {
+        console.error('Error getting presence:', presenceError);
+        throw presenceError;
+      }
       
       // Combine the data
       return profiles.map(profile => {
         const friendship = friendships.find(f => 
-          f.user_id === profile.user_id || f.friend_id === profile.user_id
+          (f.user_id === userId && f.friend_id === profile.user_id) || 
+          (f.friend_id === userId && f.user_id === profile.user_id)
         );
         
         const userPresence = presence?.find(p => p.user_id === profile.user_id);
         
         return {
-          id: profile.id,
+          id: friendship?.id || '',
           username: profile.username || '',
           full_name: profile.full_name,
           avatar_url: profile.avatar_url,
@@ -91,7 +106,10 @@ export const friendsService = {
         .eq('friend_id', userId)
         .eq('status', 'pending');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error getting friend requests:', error);
+        throw error;
+      }
       
       if (!friendships?.length) return [];
       
@@ -101,17 +119,20 @@ export const friendsService = {
       // Get profiles for these requesters
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, username, full_name, avatar_url, user_id')
+        .select('user_id, username, full_name, avatar_url')
         .in('user_id', requesterIds);
       
-      if (profilesError) throw profilesError;
+      if (profilesError) {
+        console.error('Error getting requester profiles:', profilesError);
+        throw profilesError;
+      }
       
       // Combine the data
       return profiles.map(profile => {
         const friendship = friendships.find(f => f.user_id === profile.user_id);
         
         return {
-          id: profile.id,
+          id: friendship?.id || '',
           username: profile.username || '',
           full_name: profile.full_name,
           avatar_url: profile.avatar_url,
@@ -166,7 +187,10 @@ export const friendsService = {
         .or(`and(user_id.eq.${userId},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${userId})`)
         .maybeSingle();
       
-      if (checkError) throw checkError;
+      if (checkError) {
+        console.error('Error checking existing friendship:', checkError);
+        throw checkError;
+      }
       
       if (existingFriendship) {
         if (existingFriendship.status === 'blocked') {
@@ -206,7 +230,10 @@ export const friendsService = {
           status: 'pending'
         });
       
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('Error inserting friendship:', insertError);
+        throw insertError;
+      }
       
       toast({
         title: "Friend request sent",
@@ -228,12 +255,16 @@ export const friendsService = {
   // Accept a friend request
   async acceptFriendRequest(friendshipId: string): Promise<boolean> {
     try {
+      console.log('Accepting friend request:', friendshipId);
       const { error } = await supabase
         .from('friendships')
         .update({ status: 'accepted', updated_at: new Date().toISOString() })
         .eq('id', friendshipId);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error accepting friend request:', error);
+        throw error;
+      }
       
       toast({
         title: "Friend request accepted",
@@ -255,12 +286,16 @@ export const friendsService = {
   // Decline a friend request
   async declineFriendRequest(friendshipId: string): Promise<boolean> {
     try {
+      console.log('Declining friend request:', friendshipId);
       const { error } = await supabase
         .from('friendships')
         .delete()
         .eq('id', friendshipId);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error declining friend request:', error);
+        throw error;
+      }
       
       toast({
         title: "Friend request declined",
@@ -281,12 +316,39 @@ export const friendsService = {
   // Remove a friend
   async removeFriend(userId: string, friendId: string): Promise<boolean> {
     try {
-      const { error } = await supabase
+      console.log('Removing friend. User ID:', userId, 'Friend ID:', friendId);
+      // Get the friendship ID first
+      const { data: friendship, error: findError } = await supabase
+        .from('friendships')
+        .select('id')
+        .or(`and(user_id.eq.${userId},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${userId})`)
+        .eq('status', 'accepted')
+        .maybeSingle();
+        
+      if (findError) {
+        console.error('Error finding friendship to remove:', findError);
+        throw findError;
+      }
+      
+      if (!friendship) {
+        console.error('No friendship found to remove');
+        toast({
+          title: "Error",
+          description: "Could not find friendship to remove",
+          variant: "destructive"
+        });
+        return false;
+      }
+      
+      const { error: deleteError } = await supabase
         .from('friendships')
         .delete()
-        .or(`and(user_id.eq.${userId},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${userId})`);
+        .eq('id', friendship.id);
       
-      if (error) throw error;
+      if (deleteError) {
+        console.error('Error deleting friendship:', deleteError);
+        throw deleteError;
+      }
       
       toast({
         title: "Friend removed",
@@ -307,39 +369,52 @@ export const friendsService = {
   // Block a user
   async blockUser(userId: string, targetId: string): Promise<boolean> {
     try {
+      console.log('Blocking user. User ID:', userId, 'Target ID:', targetId);
+      
       // First check if a friendship entry exists
       const { data: existingFriendship, error: checkError } = await supabase
         .from('friendships')
-        .select('id')
+        .select('id, status')
         .or(`and(user_id.eq.${userId},friend_id.eq.${targetId}),and(user_id.eq.${targetId},friend_id.eq.${userId})`)
         .maybeSingle();
       
-      if (checkError) throw checkError;
+      if (checkError) {
+        console.error('Error checking existing friendship for block:', checkError);
+        throw checkError;
+      }
       
       if (existingFriendship) {
-        // Update the existing friendship to blocked
-        const { error } = await supabase
+        if (existingFriendship.status === 'blocked') {
+          toast({
+            title: "User already blocked",
+          });
+          return true;
+        }
+        
+        // Delete the existing friendship
+        const { error: deleteError } = await supabase
           .from('friendships')
-          .update({ 
-            status: 'blocked', 
-            user_id: userId, // Ensure the blocker is the user_id
-            friend_id: targetId, // Ensure the blocked user is the friend_id
-            updated_at: new Date().toISOString() 
-          })
+          .delete()
           .eq('id', existingFriendship.id);
           
-        if (error) throw error;
-      } else {
-        // Create a new blocked friendship
-        const { error } = await supabase
-          .from('friendships')
-          .insert({
-            user_id: userId,
-            friend_id: targetId,
-            status: 'blocked'
-          });
-          
-        if (error) throw error;
+        if (deleteError) {
+          console.error('Error deleting existing friendship before block:', deleteError);
+          throw deleteError;
+        }
+      }
+      
+      // Create a new blocked friendship
+      const { error: insertError } = await supabase
+        .from('friendships')
+        .insert({
+          user_id: userId,
+          friend_id: targetId,
+          status: 'blocked'
+        });
+        
+      if (insertError) {
+        console.error('Error inserting blocked friendship:', insertError);
+        throw insertError;
       }
       
       toast({
@@ -362,6 +437,7 @@ export const friendsService = {
   // Unblock a user
   async unblockUser(userId: string, blockedId: string): Promise<boolean> {
     try {
+      console.log('Unblocking user. User ID:', userId, 'Blocked ID:', blockedId);
       const { error } = await supabase
         .from('friendships')
         .delete()
@@ -369,7 +445,10 @@ export const friendsService = {
         .eq('friend_id', blockedId)
         .eq('status', 'blocked');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error unblocking user:', error);
+        throw error;
+      }
       
       toast({
         title: "User unblocked",
@@ -393,11 +472,14 @@ export const friendsService = {
       // Get blocked entries where the user is the blocker
       const { data: blockedEntries, error } = await supabase
         .from('friendships')
-        .select('friend_id')
+        .select('id, friend_id')
         .eq('user_id', userId)
         .eq('status', 'blocked');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error getting blocked users:', error);
+        throw error;
+      }
       
       if (!blockedEntries?.length) return [];
       
@@ -407,21 +489,28 @@ export const friendsService = {
       // Get profiles for these blocked users
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, username, full_name, avatar_url, user_id')
+        .select('user_id, username, full_name, avatar_url')
         .in('user_id', blockedIds);
       
-      if (profilesError) throw profilesError;
+      if (profilesError) {
+        console.error('Error getting blocked profiles:', profilesError);
+        throw profilesError;
+      }
       
       // Create blocked user profiles
-      return profiles.map(profile => ({
-        id: profile.id,
-        username: profile.username || '',
-        full_name: profile.full_name,
-        avatar_url: profile.avatar_url,
-        online_status: false,
-        last_active: null,
-        status: 'blocked' as const
-      }));
+      return profiles.map(profile => {
+        const blockedEntry = blockedEntries.find(entry => entry.friend_id === profile.user_id);
+        
+        return {
+          id: blockedEntry?.id || '',
+          username: profile.username || '',
+          full_name: profile.full_name,
+          avatar_url: profile.avatar_url,
+          online_status: false,
+          last_active: null,
+          status: 'blocked' as const
+        };
+      });
     } catch (error) {
       console.error('Error fetching blocked users:', error);
       return [];
@@ -440,7 +529,10 @@ export const friendsService = {
         .select('friend_id, user_id, status')
         .or(`user_id.eq.${userId},friend_id.eq.${userId}`);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error getting friendships for suggestions:', error);
+        throw error;
+      }
       
       // Extract all user IDs that have a relationship with the current user
       const relatedUserIds = new Set<string>();
@@ -452,18 +544,29 @@ export const friendsService = {
       // Add the current user to exclude them
       relatedUserIds.add(userId);
       
+      // Need to convert Set to Array for use in SQL query
+      const relatedArray = Array.from(relatedUserIds);
+      
+      if (relatedArray.length === 0) {
+        // Just exclude the current user
+        relatedArray.push(userId);
+      }
+      
       // Get profiles not in the related users list
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, username, full_name, avatar_url, user_id')
-        .not('user_id', 'in', Array.from(relatedUserIds))
+        .select('user_id, username, full_name, avatar_url')
+        .not('user_id', 'in', relatedArray)
         .limit(limit);
       
-      if (profilesError) throw profilesError;
+      if (profilesError) {
+        console.error('Error getting profile suggestions:', profilesError);
+        throw profilesError;
+      }
       
       // Return suggestions
       return profiles.map(profile => ({
-        id: profile.id,
+        id: '',
         username: profile.username || '',
         full_name: profile.full_name,
         avatar_url: profile.avatar_url,
@@ -482,26 +585,40 @@ export const friendsService = {
     if (!query || query.length < 2) return [];
     
     try {
+      console.log('Searching for users with query:', query);
       // Search by username or full name
       const { data: profiles, error } = await supabase
         .from('profiles')
-        .select('id, username, full_name, avatar_url, user_id')
+        .select('user_id, username, full_name, avatar_url')
         .or(`username.ilike.%${query}%,full_name.ilike.%${query}%`)
         .neq('user_id', userId) // Exclude current user
         .limit(10);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error searching users:', error);
+        throw error;
+      }
+      
+      console.log('Found', profiles?.length || 0, 'users matching search');
       
       if (!profiles?.length) return [];
       
       // Get friendships to determine status
       const profileUserIds = profiles.map(profile => profile.user_id);
+      
+      // Build a complex query for friendships
       const { data: friendships, error: friendshipError } = await supabase
         .from('friendships')
-        .select('user_id, friend_id, status')
-        .or(`and(user_id.eq.${userId},friend_id.in.(${profileUserIds.join(',')})),and(friend_id.eq.${userId},user_id.in.(${profileUserIds.join(',')}))`);
+        .select('id, user_id, friend_id, status')
+        .or(
+          `and(user_id.eq.${userId},friend_id.in.(${profileUserIds.join(',')})),` + 
+          `and(friend_id.eq.${userId},user_id.in.(${profileUserIds.join(',')}))`
+        );
       
-      if (friendshipError) throw friendshipError;
+      if (friendshipError) {
+        console.error('Error getting friendships for search results:', friendshipError);
+        throw friendshipError;
+      }
       
       // Combine the data
       return profiles.map(profile => {
@@ -512,7 +629,7 @@ export const friendsService = {
         );
         
         return {
-          id: profile.id,
+          id: friendship?.id || '',
           username: profile.username || '',
           full_name: profile.full_name,
           avatar_url: profile.avatar_url,

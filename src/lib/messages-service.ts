@@ -80,6 +80,9 @@ export const messagesService = {
       
       // Get user profiles for conversation partners
       const partnerIds = Array.from(conversationPartners.keys());
+      
+      if (partnerIds.length === 0) return [];
+      
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('user_id, username, full_name, avatar_url')
@@ -129,7 +132,10 @@ export const messagesService = {
         .or(`and(sender_id.eq.${userId},recipient_id.eq.${partnerId}),and(sender_id.eq.${partnerId},recipient_id.eq.${userId})`)
         .order('created_at', { ascending: true });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error selecting messages:', error);
+        throw error;
+      }
       
       if (!messages?.length) return [];
       
@@ -140,14 +146,21 @@ export const messagesService = {
         .select('user_id, username, avatar_url')
         .in('user_id', userIds);
       
-      if (profilesError) throw profilesError;
+      if (profilesError) {
+        console.error('Error selecting profiles:', profilesError);
+        throw profilesError;
+      }
       
       // Mark messages as read
-      await supabase
+      const { error: updateError } = await supabase
         .from('messages')
         .update({ is_read: true })
         .eq('recipient_id', userId)
         .eq('sender_id', partnerId);
+        
+      if (updateError) {
+        console.error('Error marking messages as read:', updateError);
+      }
       
       // Combine data into messages with sender info
       return messages.map(message => {
@@ -170,6 +183,28 @@ export const messagesService = {
   // Send a message
   async sendMessage(senderId: string, recipientId: string, content: string, replyToId?: string): Promise<boolean> {
     try {
+      // Check if we're blocked by this user
+      const { data: friendship, error: checkError } = await supabase
+        .from('friendships')
+        .select('status')
+        .eq('user_id', recipientId)
+        .eq('friend_id', senderId)
+        .eq('status', 'blocked')
+        .maybeSingle();
+      
+      if (checkError) {
+        console.error('Error checking blocked status:', checkError);
+      }
+      
+      if (friendship) {
+        toast({
+          title: "Cannot send message",
+          description: "You may have been blocked by this user",
+          variant: "destructive"
+        });
+        return false;
+      }
+      
       const { error } = await supabase
         .from('messages')
         .insert({
@@ -179,7 +214,10 @@ export const messagesService = {
           reply_to: replyToId || null
         });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Insert message error:', error);
+        throw error;
+      }
       
       return true;
     } catch (error) {
@@ -203,7 +241,10 @@ export const messagesService = {
         .eq('id', messageId)
         .eq('sender_id', userId);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Delete message error:', error);
+        throw error;
+      }
       
       return true;
     } catch (error) {

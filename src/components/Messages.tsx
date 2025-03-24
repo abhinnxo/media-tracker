@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useParams, useNavigate } from 'react-router-dom';
 import { messagesService, Conversation, MessageWithSender } from '@/lib/messages-service';
-import { friendsService } from '@/lib/friends-service';
+import { friendsService, FriendProfile } from '@/lib/friends-service';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,7 +41,9 @@ import {
   Clock,
   Check,
   CheckCheck,
-  X
+  X,
+  UserMinus,
+  Ban
 } from 'lucide-react';
 import { format, isToday, isYesterday } from 'date-fns';
 
@@ -57,15 +60,18 @@ export const Messages = () => {
   const [replyingTo, setReplyingTo] = useState<MessageWithSender | null>(null);
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isPartnerTyping, setIsPartnerTyping] = useState(false);
+  const [friends, setFriends] = useState<FriendProfile[]>([]);
+  const [loadingFriends, setLoadingFriends] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const conversationsRef = useRef<HTMLDivElement>(null);
   const messageSubscriptionRef = useRef<any>(null);
   const presenceChannelRef = useRef<any>(null);
 
-  // Load conversations on component mount
+  // Load conversations and friends on component mount
   useEffect(() => {
     if (user) {
       loadConversations();
+      loadFriends();
 
       // Subscribe to new messages
       messageSubscriptionRef.current = messagesService.subscribeToMessages(
@@ -186,6 +192,20 @@ export const Messages = () => {
     }
   };
 
+  const loadFriends = async () => {
+    if (!user) return;
+    
+    setLoadingFriends(true);
+    try {
+      const friendsData = await friendsService.getFriends(user.id);
+      setFriends(friendsData);
+    } catch (error) {
+      console.error('Error loading friends:', error);
+    } finally {
+      setLoadingFriends(false);
+    }
+  };
+
   const loadMessages = async (partnerId: string) => {
     try {
       const messagesData = await messagesService.getMessages(user!.id, partnerId);
@@ -248,6 +268,27 @@ export const Messages = () => {
     }
   };
 
+  const handleRemoveFriend = async (friendId: string) => {
+    try {
+      const success = await friendsService.removeFriend(user!.id, friendId);
+      if (success) {
+        toast({
+          title: "Friend removed",
+          description: "This user has been removed from your friends list"
+        });
+        loadFriends();
+        navigate('/messages');
+      }
+    } catch (error) {
+      console.error('Error removing friend:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove friend",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleBlockUser = async (userId: string) => {
     if (!partnerId) return;
 
@@ -258,6 +299,7 @@ export const Messages = () => {
           title: "User blocked",
           description: "You will no longer receive messages from this user"
         });
+        loadFriends();
         navigate('/messages');
       }
     } catch (error) {
@@ -268,6 +310,10 @@ export const Messages = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const handleStartConversation = (friendId: string) => {
+    navigate(`/messages/${friendId}`);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -325,6 +371,14 @@ export const Messages = () => {
     return messages.find(msg => msg.id === replyId);
   };
 
+  // Get friends who don't have conversations yet
+  const getFriendsWithoutConversations = () => {
+    // Get IDs of conversation partners
+    const conversationPartnerIds = new Set(conversations.map(c => c.user_id));
+    // Filter friends who don't have conversations
+    return friends.filter(f => !conversationPartnerIds.has(f.username));
+  };
+
   if (!user) {
     return (
       <div className="text-center py-10">
@@ -349,44 +403,90 @@ export const Messages = () => {
           ) : (
             <ScrollArea className="h-[calc(100%-4rem)]" ref={conversationsRef}>
               {conversations.length > 0 ? (
-                conversations.map(conversation => (
-                  <div
-                    key={conversation.user_id}
-                    className={`p-4 border-b hover:bg-muted/50 cursor-pointer transition-colors ${partnerId === conversation.user_id ? 'bg-muted' : ''
-                      }`}
-                    onClick={() => navigate(`/messages/${conversation.user_id}`)}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="relative">
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage src={conversation.avatar_url || ''} alt={conversation.username} />
-                          <AvatarFallback>
-                            <User className="h-5 w-5" />
-                          </AvatarFallback>
-                        </Avatar>
-                        {conversation.online_status && (
-                          <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-background rounded-full"></span>
+                <>
+                  <div className="p-2 text-sm font-medium text-muted-foreground">Recent Conversations</div>
+                  {conversations.map(conversation => (
+                    <div
+                      key={conversation.user_id}
+                      className={`p-4 border-b hover:bg-muted/50 cursor-pointer transition-colors ${partnerId === conversation.user_id ? 'bg-muted' : ''
+                        }`}
+                      onClick={() => navigate(`/messages/${conversation.user_id}`)}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="relative">
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={conversation.avatar_url || ''} alt={conversation.username} />
+                            <AvatarFallback>
+                              <User className="h-5 w-5" />
+                            </AvatarFallback>
+                          </Avatar>
+                          {conversation.online_status && (
+                            <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-background rounded-full"></span>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <h3 className="font-medium truncate">
+                              {conversation.full_name || conversation.username}
+                            </h3>
+                            <span className="text-xs text-muted-foreground ml-2">
+                              {conversation.last_message_time ? formatMessageDate(conversation.last_message_time) : ''}
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground truncate">
+                            {conversation.last_message}
+                          </p>
+                        </div>
+                        {conversation.unread_count > 0 && (
+                          <Badge className="ml-auto">{conversation.unread_count}</Badge>
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-medium truncate">
-                            {conversation.full_name || conversation.username}
-                          </h3>
-                          <span className="text-xs text-muted-foreground ml-2">
-                            {conversation.last_message_time ? formatMessageDate(conversation.last_message_time) : ''}
-                          </span>
-                        </div>
-                        <p className="text-sm text-muted-foreground truncate">
-                          {conversation.last_message}
-                        </p>
-                      </div>
-                      {conversation.unread_count > 0 && (
-                        <Badge className="ml-auto">{conversation.unread_count}</Badge>
-                      )}
                     </div>
-                  </div>
-                ))
+                  ))}
+
+                  {/* Friends who don't have conversations yet */}
+                  {friends.length > 0 && (
+                    <div className="mt-4">
+                      <div className="p-2 text-sm font-medium text-muted-foreground">Friends</div>
+                      {friends.map(friend => {
+                        // Check if this friend already has a conversation
+                        const hasConversation = conversations.some(c => c.user_id === friend.id);
+                        if (hasConversation) return null;
+                        
+                        return (
+                          <div
+                            key={friend.id}
+                            className="p-4 border-b hover:bg-muted/50 cursor-pointer transition-colors"
+                            onClick={() => handleStartConversation(friend.id)}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="relative">
+                                <Avatar className="h-10 w-10">
+                                  <AvatarImage src={friend.avatar_url || ''} alt={friend.username} />
+                                  <AvatarFallback>
+                                    <User className="h-5 w-5" />
+                                  </AvatarFallback>
+                                </Avatar>
+                                {friend.online_status && (
+                                  <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-background rounded-full"></span>
+                                )}
+                              </div>
+                              <div>
+                                <h3 className="font-medium">
+                                  {friend.full_name || friend.username}
+                                </h3>
+                                <p className="text-xs text-muted-foreground">
+                                  {friend.online_status ? 'Online' : 'Offline'}
+                                </p>
+                              </div>
+                              <MessageCircle className="h-4 w-4 ml-auto text-muted-foreground" />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="text-center py-10">
                   <MessageCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
@@ -449,11 +549,15 @@ export const Messages = () => {
                     <User className="mr-2 h-4 w-4" />
                     View Profile
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleRemoveFriend(partnerId)} className="text-yellow-600">
+                    <UserMinus className="mr-2 h-4 w-4" />
+                    Remove Friend
+                  </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => handleBlockUser(partnerId)}
                     className="text-destructive"
                   >
-                    <CircleSlash className="mr-2 h-4 w-4" />
+                    <Ban className="mr-2 h-4 w-4" />
                     Block User
                   </DropdownMenuItem>
                 </DropdownMenuContent>
