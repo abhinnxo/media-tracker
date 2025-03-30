@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { MediaItem, MediaStatus } from '@/lib/types';
@@ -6,6 +7,9 @@ import { Layout } from '@/components/Layout';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { AnimatedTransition } from '@/components/AnimatedTransition';
+import { DetailedMediaView } from '@/components/DetailedMediaView';
+import { MediaSearchResult, mediaApi } from '@/lib/api';
+import { MediaCategory } from '@/lib/types';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,11 +42,6 @@ import {
   Film,
   Tv,
   Book,
-  Clock,
-  Eye,
-  Check,
-  X,
-  Pause,
   File
 } from 'lucide-react';
 
@@ -51,6 +50,7 @@ const Details: React.FC = () => {
   const navigate = useNavigate();
   const [mediaItem, setMediaItem] = useState<MediaItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [detailedMedia, setDetailedMedia] = useState<MediaSearchResult | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -61,6 +61,20 @@ const Details: React.FC = () => {
         const item = await mediaStore.getById(id);
         if (item) {
           setMediaItem(item);
+          
+          // Create detailed media search result for DetailedMediaView
+          const detailedData: MediaSearchResult = {
+            id: item.id,
+            title: item.title,
+            description: item.description || "",
+            imageUrl: item.image_url || "",
+            category: item.category as MediaCategory,
+            year: item.year || undefined,
+            creator: item.creator || undefined,
+            genres: item.genres || undefined,
+          };
+          
+          setDetailedMedia(detailedData);
         } else {
           toast({
             title: "Media not found",
@@ -94,27 +108,6 @@ const Details: React.FC = () => {
       toast({
         title: "Error",
         description: "There was an error deleting the media item",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleStatusChange = async (newStatus: MediaStatus) => {
-    if (!mediaItem) return;
-
-    try {
-      const updatedItem = { ...mediaItem, status: newStatus };
-      await mediaStore.save(updatedItem);
-      setMediaItem(updatedItem);
-      toast({
-        title: "Status updated",
-        description: `${mediaItem.title} is now marked as ${getStatusLabel(newStatus)}`,
-      });
-    } catch (error) {
-      console.error('Error updating status:', error);
-      toast({
-        title: "Error",
-        description: "There was an error updating the status",
         variant: "destructive",
       });
     }
@@ -291,76 +284,26 @@ const Details: React.FC = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-
-            {mediaItem.description && (
-              <div>
-                <h2 className="text-lg font-medium mb-2">Description</h2>
-                <p className="text-muted-foreground">{mediaItem.description}</p>
-              </div>
-            )}
-
-            {mediaItem.rating !== undefined && (
+            
+            {/* User's personal notes section */}
+            {mediaItem.notes && (
               <div>
                 <h2 className="flex items-center text-lg font-medium mb-2">
-                  <Star size={18} className="mr-2 text-amber-500" />
-                  Rating
+                  <MessageCircle size={18} className="mr-2" />
+                  My Notes
                 </h2>
-                <div className="text-xl font-semibold text-amber-500">
-                  {mediaItem.rating}/10
+                <div className="p-4 bg-secondary/50 rounded-lg">
+                  <p className="whitespace-pre-line">{mediaItem.notes}</p>
                 </div>
               </div>
             )}
-
-            <div>
-              <h2 className="text-lg font-medium mb-3">Change Status</h2>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant={mediaItem.status === MediaStatus.TO_CONSUME ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handleStatusChange(MediaStatus.TO_CONSUME)}
-                  className="flex items-center"
-                >
-                  <Clock size={16} className="mr-1" />
-                  To Watch/Read
-                </Button>
-                <Button
-                  variant={mediaItem.status === MediaStatus.IN_PROGRESS ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handleStatusChange(MediaStatus.IN_PROGRESS)}
-                  className="flex items-center"
-                >
-                  <Eye size={16} className="mr-1" />
-                  In Progress
-                </Button>
-                <Button
-                  variant={mediaItem.status === MediaStatus.COMPLETED ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handleStatusChange(MediaStatus.COMPLETED)}
-                  className="flex items-center"
-                >
-                  <Check size={16} className="mr-1" />
-                  Completed
-                </Button>
-                <Button
-                  variant={mediaItem.status === MediaStatus.ON_HOLD ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handleStatusChange(MediaStatus.ON_HOLD)}
-                  className="flex items-center"
-                >
-                  <Pause size={16} className="mr-1" />
-                  On Hold
-                </Button>
-                <Button
-                  variant={mediaItem.status === MediaStatus.DROPPED ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handleStatusChange(MediaStatus.DROPPED)}
-                  className="flex items-center"
-                >
-                  <X size={16} className="mr-1" />
-                  Dropped
-                </Button>
+            
+            {/* Display detailed media information */}
+            {detailedMedia && (
+              <div className="mt-6">
+                <DetailedMediaView media={detailedMedia} />
               </div>
-            </div>
+            )}
 
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -376,7 +319,7 @@ const Details: React.FC = () => {
 
               {mediaItem.start_date && mediaItem.end_date && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Clock size={16} />
+                  <Calendar size={16} />
                   <span>
                     {formatDate(mediaItem.start_date)} - {formatDate(mediaItem.end_date)}
                   </span>
@@ -398,18 +341,6 @@ const Details: React.FC = () => {
                         {tag}
                       </span>
                     ))}
-                  </div>
-                </div>
-              )}
-
-              {mediaItem.notes && (
-                <div>
-                  <h2 className="flex items-center text-lg font-medium mb-2">
-                    <MessageCircle size={18} className="mr-2" />
-                    Notes
-                  </h2>
-                  <div className="p-4 bg-secondary/50 rounded-lg">
-                    <p className="whitespace-pre-line">{mediaItem.notes}</p>
                   </div>
                 </div>
               )}
