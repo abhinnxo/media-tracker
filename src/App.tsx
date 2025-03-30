@@ -18,6 +18,7 @@ import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import Onboarding from "./pages/Onboarding";
 import UserProfile from "./pages/user/[username]";
+import Explore from "./pages/Explore";
 
 // Auth Pages
 import Login from "./pages/Auth/Login";
@@ -44,6 +45,7 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/update-password" element={<UpdatePassword />} />
               <Route path="/user/:username" element={<UserProfile />} />
+              <Route path="/explore" element={<Explore />} />
               
               {/* Protected routes */}
               <Route path="/library" element={

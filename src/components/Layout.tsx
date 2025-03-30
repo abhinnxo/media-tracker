@@ -1,282 +1,161 @@
-
-import React, { useState } from 'react';
-import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { Plus, Home, Library, Menu, X, User, LogOut } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { AnimatedTransition } from './AnimatedTransition';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useProfileStore } from '@/lib/profile';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu"
 import {
-  SidebarProvider,
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarTrigger,
-} from '@/components/ui/sidebar';
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { ModeToggle } from "@/components/ModeToggle"
+import { Link } from "react-router-dom"
+import { useAuth } from "@/contexts/AuthContext"
+import { useEffect, useState } from "react"
+import { useUser } from "@/hooks/use-user"
+import { Skeleton } from "@/components/ui/skeleton"
+import { cn } from "@/lib/utils"
+import { Menu, Search } from "lucide-react"
 
-interface LayoutProps {
-  children: React.ReactNode;
+interface Props {
+  children: React.ReactNode
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const profile = useProfileStore(state => state.profile);
-  const { user, signOut } = useAuth();
+export const Layout: React.FC<Props> = ({ children }) => {
+  const { logout } = useAuth()
+  const { user, isLoading } = useUser()
+  const [isMounted, setIsMounted] = useState(false)
 
-  // Navigation items - removed friends and messages
-  const navItems = [
-    { icon: Home, label: 'Home', path: '/home' },
-    { icon: Library, label: 'Library', path: '/library' },
-  ];
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
-  // Handle logout
-  const handleLogout = async () => {
-    await signOut();
-    navigate('/login');
-  };
-
-  // Close sidebar when nav item is clicked
-  const handleNavClick = () => {
-    if (sidebarOpen) {
-      setSidebarOpen(false);
-    }
-  };
+  if (!isMounted) {
+    return null
+  }
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <div className="flex w-full h-screen bg-background">
-        {/* Desktop Sidebar - Using shadcn/ui sidebar */}
-        <Sidebar variant="sidebar" collapsible="icon">
-          <SidebarHeader>
-            <div className="flex items-center justify-between p-2">
-              {sidebarOpen && <h1 className=" text-xl font-semibold tracking-tight pl-2">
-                Media Tracker
-              </h1>}
-              <SidebarTrigger onClick={() => setSidebarOpen(!sidebarOpen)} />
+    <div className="flex min-h-screen flex-col">
+      <header className="container z-40 bg-background">
+        <div className="flex h-16 items-center justify-between py-2">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mr-2 px-0 lg:hidden"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="pr-0">
+              <SheetHeader>
+                <SheetTitle>Are you sure absolutely sure?</SheetTitle>
+                <SheetDescription>
+                  This action cannot be undone. This will permanently delete
+                  your account and remove your data from our servers.
+                </SheetDescription>
+              </SheetHeader>
+            </SheetContent>
+          </Sheet>
+          <Link to="/home">
+            <div className="hidden items-center space-x-2 lg:flex">
+              <span className="font-bold">MyMediaList</span>
             </div>
-          </SidebarHeader>
-
-          <SidebarContent>
-            <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.path}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={location.pathname === item.path}
-                    tooltip={item.label}
-                  >
-                    <Link to={item.path} onClick={handleNavClick}>
-                      <item.icon />
-                      <span>{item.label}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  tooltip="Add Media"
-                >
-                  <Link to="/add" onClick={handleNavClick}>
-                    <Plus />
-                    <span>Add Media</span>
+          </Link>
+          <div className="flex w-full items-center justify-between space-x-2 sm:w-auto">
+            <NavigationMenu>
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <Link to="/home" legacyBehavior passHref>
+                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                      <span>Home</span>
+                    </NavigationMenuLink>
                   </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarContent>
-
-          <SidebarFooter>
-            <SidebarMenuItem>
-              {user ? (
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <Link to="/explore" legacyBehavior passHref>
+                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                      <span>Explore</span>
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <Link to="/library" legacyBehavior passHref>
+                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                      <span>Library</span>
+                    </NavigationMenuLink>
+                  </Link>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
+            <div className="items-center space-x-2 hidden md:flex">
+              <ModeToggle />
+              {isLoading ? (
+                <Skeleton className="h-10 w-[100px] rounded-full" />
+              ) : user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={location.pathname === '/profile'}
-                      tooltip="Profile"
-                      size="lg"
-                    >
-                      <div className="flex items-center gap-3 cursor-pointer">
-                        <Avatar className="h-9 w-9">
-                          <AvatarImage src={profile.image} />
-                          <AvatarFallback>
-                            <User className="h-5 w-5" />
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col items-start text-left">
-                          <span className="font-medium">{profile.name || user.email?.split('@')[0] || 'Your Profile'}</span>
-                          <span className="text-xs text-muted-foreground">{profile.username || 'Edit profile'}</span>
-                        </div>
-                      </div>
-                    </SidebarMenuButton>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={user?.image} alt={user?.name || "Avatar"} />
+                        <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                    </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem onClick={() => navigate('/profile')}>
-                      <User className="mr-2 h-4 w-4" />
-                      <span>Profile</span>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuItem asChild>
+                      <Link to="/profile">Profile</Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout}>
-                      <LogOut className="mr-2 h-4 w-4 text-red-500" />
-                      <span className='text-red-500'>Log out</span>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        logout()
+                      }}
+                    >
+                      Logout
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <SidebarMenuButton
-                  asChild
-                  tooltip="Login"
-                  size="lg"
-                >
-                  <Link to="/login" className="flex items-center gap-3">
-                    <Button>Login</Button>
-                  </Link>
-                </SidebarMenuButton>
+                <Link to="/login">
+                  <Button variant="outline" size="sm">
+                    Login
+                  </Button>
+                </Link>
               )}
-            </SidebarMenuItem>
-          </SidebarFooter>
-        </Sidebar>
-
-        {/* Mobile Sidebar (Animated Overlay) */}
-        <AnimatePresence>
-          {sidebarOpen && (
-            <>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-              />
-
-              <motion.aside
-                initial={{ x: '-100%' }}
-                animate={{ x: 0 }}
-                exit={{ x: '-100%' }}
-                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className="fixed top-0 left-0 h-full w-64 bg-card z-50 md:hidden"
-              >
-                <div className="flex justify-between items-center p-4 border-b border-border">
-                  <h2 className="font-semibold">Media Tracker</h2>
-                  <button
-                    onClick={() => setSidebarOpen(!sidebarOpen)}
-                    className="p-1 rounded-full hover:bg-secondary transition-all-200"
-                  >
-                    <X size={20} />
-                  </button>
-                </div>
-
-                <nav className="flex-1 px-2 py-4 space-y-1">
-                  {navItems.map((item) => (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      className={cn(
-                        "flex items-center px-4 py-3 rounded-lg transition-all-200",
-                        location.pathname === item.path
-                          ? "bg-primary text-primary-foreground"
-                          : "hover:bg-secondary"
-                      )}
-                      onClick={handleNavClick}
-                    >
-                      <item.icon size={20} className="mr-3" />
-                      <span>{item.label}</span>
-                    </Link>
-                  ))}
-                  <Link
-                    to="/add"
-                    className={cn(
-                      "flex items-center px-4 py-3 rounded-lg transition-all-200",
-                      location.pathname === '/add'
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-secondary"
-                    )}
-                    onClick={handleNavClick}
-                  >
-                    <Plus size={20} className="mr-3" />
-                    <span>Add Media</span>
-                  </Link>
-
-                  {user ? (
-                    <>
-                      <Link
-                        to="/profile"
-                        className={cn(
-                          "flex items-center px-4 py-3 rounded-lg transition-all-200 mt-4",
-                          location.pathname === '/profile'
-                            ? "bg-primary text-primary-foreground"
-                            : "hover:bg-secondary"
-                        )}
-                        onClick={handleNavClick}
-                      >
-                        <Avatar className="h-7 w-7 mr-3">
-                          <AvatarImage src={profile.image} />
-                          <AvatarFallback>
-                            <User className="h-4 w-4" />
-                          </AvatarFallback>
-                        </Avatar>
-                        <span>Profile</span>
-                      </Link>
-
-                      <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center px-4 py-3 rounded-lg transition-all-200 hover:bg-secondary text-left"
-                      >
-                        <LogOut size={20} className="mr-3 text-red-500" />
-                        <span className='text-red-500'>Log out</span>
-                      </button>
-                    </>
-                  ) : (
-                    <Link
-                      to="/login"
-                      className="flex items-center px-4 py-3 rounded-lg transition-all-200 hover:bg-secondary mt-4"
-                      onClick={handleNavClick}
-                    >
-                      <User size={20} className="mr-3" />
-                      <span>Login</span>
-                    </Link>
-                  )}
-                </nav>
-              </motion.aside>
-            </>
-          )}
-        </AnimatePresence>
-
-        {/* Main Content */}
-        <main className="flex-1">
-          <div className='h-fit md:hidden'>
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 rounded-full hover:bg-secondary transition-all-200"
-              aria-label="Toggle sidebar"
-            >
-              <Menu size={24} />
-            </button>
+            </div>
           </div>
-          <AnimatedTransition variant="fadeIn" className="px-4 py-6 md:px-6 md:py-8 container mx-auto">
-            {children}
-          </AnimatedTransition>
-        </main>
-      </div >
-    </SidebarProvider >
-  );
-};
-
-export default Layout;
+        </div>
+      </header>
+      <main className="flex-1">{children}</main>
+      <footer className="w-full border-t bg-background">
+        <div className="container flex flex-col items-center justify-center space-y-4 py-6 md:flex-row md:justify-between md:space-y-0">
+          <span className="text-sm text-muted-foreground">
+            © 2023 MyMediaList. All rights reserved.
+          </span>
+        </div>
+      </footer>
+    </div>
+  )
+}
