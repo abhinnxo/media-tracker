@@ -12,6 +12,11 @@ export interface MediaSearchResult {
   imageUrl: string;
   description: string;
   category: MediaCategory;
+  // Additional fields
+  year?: string;
+  creator?: string; // Author or Director
+  genres?: string[];
+  episodeCount?: number;
 }
 
 export const mediaApi = {

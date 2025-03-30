@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 
 interface MediaSearchProps {
   category?: MediaCategory;
@@ -152,27 +153,73 @@ export const MediaSearch: React.FC<MediaSearchProps> = ({
             {results.map((result) => (
               <li
                 key={result.id}
-                className="px-3 py-2 hover:bg-accent cursor-pointer"
+                className="px-3 py-3 hover:bg-accent cursor-pointer"
                 onClick={() => handleSelect(result)}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-start gap-3">
                   {result.imageUrl ? (
                     <img
                       src={result.imageUrl}
                       alt={result.title}
-                      className="h-12 w-9 object-cover rounded"
+                      className="h-20 w-16 object-cover rounded"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = 'https://placehold.co/400x600?text=No+Image';
                       }}
                     />
                   ) : (
-                    <div className="h-12 w-9 bg-muted flex items-center justify-center rounded text-xs text-muted-foreground">
+                    <div className="h-20 w-16 bg-muted flex items-center justify-center rounded text-xs text-muted-foreground">
                       No img
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{result.title}</p>
-                    <p className="text-xs text-muted-foreground">{result.category}</p>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="font-medium truncate">{result.title}</p>
+                        {result.year && (
+                          <p className="text-sm text-muted-foreground">
+                            Released: {result.year}
+                          </p>
+                        )}
+                      </div>
+                      <Badge variant="outline" className="ml-2 self-start">
+                        {result.category}
+                      </Badge>
+                    </div>
+                    
+                    {result.creator && (
+                      <p className="text-sm mt-1">
+                        <span className="font-medium">{result.category === MediaCategory.BOOK || result.category === MediaCategory.MANGA ? 'Author: ' : 'Director: '}</span>
+                        {result.creator}
+                      </p>
+                    )}
+                    
+                    {result.genres && result.genres.length > 0 && (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {result.genres.slice(0, 3).map((genre, idx) => (
+                          <Badge key={idx} variant="secondary" className="text-xs">
+                            {genre}
+                          </Badge>
+                        ))}
+                        {result.genres.length > 3 && (
+                          <Badge variant="secondary" className="text-xs">
+                            +{result.genres.length - 3} more
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+                    
+                    {result.episodeCount && (
+                      <p className="text-sm mt-1">
+                        <span className="font-medium">Episodes: </span>
+                        {result.episodeCount}
+                      </p>
+                    )}
+                    
+                    {result.description && (
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                        {result.description}
+                      </p>
+                    )}
                   </div>
                 </div>
               </li>
