@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+
+import React, { useState } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { Plus, Home, Library, Menu, X, User, PanelLeft, LogOut, MessageSquare } from 'lucide-react';
+import { Plus, Home, Library, Menu, X, User, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AnimatedTransition } from './AnimatedTransition';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -24,7 +25,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarInset,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 
@@ -39,12 +39,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const profile = useProfileStore(state => state.profile);
   const { user, signOut } = useAuth();
 
-  // Navigation items
+  // Navigation items - removed friends and messages
   const navItems = [
-    { icon: Home, label: 'Home', path: '/' },
+    { icon: Home, label: 'Home', path: '/home' },
     { icon: Library, label: 'Library', path: '/library' },
-    { icon: User, label: 'Friends', path: '/friends' },
-    { icon: MessageSquare, label: 'Messages', path: '/messages' },
   ];
 
   // Handle logout

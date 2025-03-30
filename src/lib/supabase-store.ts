@@ -1,3 +1,4 @@
+
 import { supabase } from './supabase';
 import { MediaItem, MediaCategory, MediaStatus, MediaFilterOptions } from './types';
 
@@ -6,17 +7,18 @@ const convertDbToAppItem = (dbItem: any): MediaItem => {
   return {
     id: dbItem.id,
     title: dbItem.title,
-    description: dbItem.description || undefined,
-    image_url: dbItem.image_url || undefined,
+    description: dbItem.description || null,
+    image_url: dbItem.image_url || null,
     category: dbItem.category as MediaCategory,
     status: dbItem.status as MediaStatus,
-    rating: dbItem.rating || undefined,
+    rating: dbItem.rating || null,
     tags: dbItem.tags || [],
-    start_date: dbItem.start_date || undefined,
-    end_date: dbItem.end_date || undefined,
-    notes: dbItem.notes || undefined,
+    start_date: dbItem.start_date || null,
+    end_date: dbItem.end_date || null,
+    notes: dbItem.notes || null,
     created_at: dbItem.created_at,
-    updated_at: dbItem.updated_at
+    updated_at: dbItem.updated_at,
+    user_id: dbItem.user_id
   };
 };
 

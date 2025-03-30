@@ -3,12 +3,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AnimatePresence } from "framer-motion";
 
 // Pages
+import LandingPage from "./pages/LandingPage";
 import Index from "./pages/Index";
 import Library from "./pages/Library";
 import AddEdit from "./pages/AddEdit";
@@ -17,11 +18,6 @@ import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import Onboarding from "./pages/Onboarding";
 import UserProfile from "./pages/user/[username]";
-
-// New Pages
-import Friends from "./pages/Friends";
-import Messages from "./pages/Messages";
-import Conversation from "./pages/Conversation";
 
 // Auth Pages
 import Login from "./pages/Auth/Login";
@@ -41,7 +37,8 @@ const App = () => (
           <AnimatePresence mode="wait">
             <Routes>
               {/* Public routes */}
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/home" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/reset-password" element={<ResetPassword />} />
@@ -77,23 +74,6 @@ const App = () => (
               <Route path="/onboarding" element={
                 <ProtectedRoute>
                   <Onboarding />
-                </ProtectedRoute>
-              } />
-              
-              {/* New routes for friendship and messaging */}
-              <Route path="/friends" element={
-                <ProtectedRoute>
-                  <Friends />
-                </ProtectedRoute>
-              } />
-              <Route path="/messages" element={
-                <ProtectedRoute>
-                  <Messages />
-                </ProtectedRoute>
-              } />
-              <Route path="/messages/:partnerId" element={
-                <ProtectedRoute>
-                  <Conversation />
                 </ProtectedRoute>
               } />
               
