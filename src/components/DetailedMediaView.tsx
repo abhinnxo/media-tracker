@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -197,13 +196,13 @@ export const DetailedMediaView: React.FC<DetailedMediaViewProps> = ({ media }) =
                       <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
                     </div>
                   ) : details?.cast ? (
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                       <div>
-                        <h3 className="text-sm font-medium mb-2">Cast</h3>
+                        <h3 className="text-sm font-medium mb-4">Cast</h3>
                         <ScrollArea className="h-[200px]">
-                          <div className="space-y-2">
+                          <div className="space-y-3">
                             {details.cast.map((person: any, index: number) => (
-                              <div key={index} className="flex justify-between">
+                              <div key={index} className="flex justify-between items-center py-2">
                                 <span className="font-medium">{person.name}</span>
                                 <span className="text-muted-foreground">{person.character}</span>
                               </div>
@@ -214,11 +213,11 @@ export const DetailedMediaView: React.FC<DetailedMediaViewProps> = ({ media }) =
                       
                       {details.crew && (
                         <div>
-                          <h3 className="text-sm font-medium mb-2">Crew</h3>
+                          <h3 className="text-sm font-medium mb-4">Crew</h3>
                           <ScrollArea className="h-[200px]">
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                               {details.crew.map((person: any, index: number) => (
-                                <div key={index} className="flex justify-between">
+                                <div key={index} className="flex justify-between items-center py-2">
                                   <span className="font-medium">{person.name}</span>
                                   <span className="text-muted-foreground">{person.job}</span>
                                 </div>
