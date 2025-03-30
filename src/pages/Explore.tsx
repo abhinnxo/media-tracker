@@ -32,9 +32,11 @@ const Explore: React.FC = () => {
               <DetailedMediaView media={selectedMedia} />
             ) : (
               <EmptyState
-                icon={<Search className="h-12 w-12 text-muted-foreground" />}
+                type="noResults"
                 title="Search for Media"
                 description="Use the search box above to find movies, TV shows, anime, manga, and books."
+                actionLabel=""
+                actionLink=""
               />
             )}
           </div>

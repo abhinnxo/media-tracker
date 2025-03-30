@@ -1,3 +1,4 @@
+
 import {
   Sheet,
   SheetContent,
@@ -22,31 +23,56 @@ import {
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
-  NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ModeToggle } from "@/components/ModeToggle"
 import { Link } from "react-router-dom"
 import { useAuth } from "@/contexts/AuthContext"
-import { useEffect, useState } from "react"
-import { useUser } from "@/hooks/use-user"
+import { useState, useEffect } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
-import { Menu, Search } from "lucide-react"
+import { Menu, Search, Sun, Moon } from "lucide-react"
+import { Toggle } from "@/components/ui/toggle"
+import { useTheme } from "next-themes"
 
 interface Props {
   children: React.ReactNode
 }
 
+// Create a simple ModeToggle component since it's missing
+const ModeToggle = () => {
+  const { theme, setTheme } = useTheme();
+  
+  return (
+    <div className="flex items-center space-x-2">
+      <Toggle
+        aria-label="Toggle theme"
+        pressed={theme === "dark"}
+        onPressedChange={() => setTheme(theme === "dark" ? "light" : "dark")}
+      >
+        {theme === "dark" ? (
+          <Sun className="h-4 w-4" />
+        ) : (
+          <Moon className="h-4 w-4" />
+        )}
+      </Toggle>
+    </div>
+  );
+};
+
 export const Layout: React.FC<Props> = ({ children }) => {
-  const { logout } = useAuth()
-  const { user, isLoading } = useUser()
+  const { user, signOut } = useAuth()
   const [isMounted, setIsMounted] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     setIsMounted(true)
+    // Simulate loading
+    const timer = setTimeout(() => {
+      setIsLoading(false)
+    }, 1000)
+    return () => clearTimeout(timer)
   }, [])
 
   if (!isMounted) {
@@ -86,23 +112,23 @@ export const Layout: React.FC<Props> = ({ children }) => {
             <NavigationMenu>
               <NavigationMenuList>
                 <NavigationMenuItem>
-                  <Link to="/home" legacyBehavior passHref>
+                  <Link to="/home">
                     <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                      <span>Home</span>
+                      Home
                     </NavigationMenuLink>
                   </Link>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                  <Link to="/explore" legacyBehavior passHref>
+                  <Link to="/explore">
                     <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                      <span>Explore</span>
+                      Explore
                     </NavigationMenuLink>
                   </Link>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                  <Link to="/library" legacyBehavior passHref>
+                  <Link to="/library">
                     <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                      <span>Library</span>
+                      Library
                     </NavigationMenuLink>
                   </Link>
                 </NavigationMenuItem>
@@ -117,8 +143,8 @@ export const Layout: React.FC<Props> = ({ children }) => {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="h-8 w-8 p-0">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={user?.image} alt={user?.name || "Avatar"} />
-                        <AvatarFallback>{user?.name?.charAt(0)}</AvatarFallback>
+                        <AvatarImage src="" alt={user?.email || "Avatar"} />
+                        <AvatarFallback>{user?.email?.charAt(0)}</AvatarFallback>
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
@@ -130,7 +156,7 @@ export const Layout: React.FC<Props> = ({ children }) => {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={() => {
-                        logout()
+                        signOut()
                       }}
                     >
                       Logout
