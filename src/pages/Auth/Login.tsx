@@ -16,28 +16,28 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const { signIn } = useAuth();
   const navigate = useNavigate();
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    
+
     if (!email || !password) {
       setError('Please fill in all fields');
       setLoading(false);
       return;
     }
-    
+
     try {
       const { error } = await signIn(email, password);
-      
+
       if (error) {
         setError(error.message);
       } else {
-        navigate('/');
+        navigate('/home');
       }
     } catch (err) {
       setError('An unexpected error occurred');
@@ -46,7 +46,7 @@ const Login: React.FC = () => {
       setLoading(false);
     }
   };
-  
+
   return (
     <div className="h-screen flex items-center justify-center p-4 bg-muted/30">
       <AnimatedTransition variant="fadeIn" className="w-full max-w-md">
@@ -57,7 +57,7 @@ const Login: React.FC = () => {
               Enter your credentials to access your account
             </CardDescription>
           </CardHeader>
-          
+
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
               {error && (
@@ -66,7 +66,7 @@ const Login: React.FC = () => {
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
-              
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -79,7 +79,7 @@ const Login: React.FC = () => {
                   autoComplete="email"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
@@ -100,7 +100,7 @@ const Login: React.FC = () => {
                 />
               </div>
             </CardContent>
-            
+
             <CardFooter className="flex flex-col space-y-4">
               <Button
                 type="submit"
@@ -116,14 +116,14 @@ const Login: React.FC = () => {
                   'Login'
                 )}
               </Button>
-              
+
               <div className="text-center text-sm">
                 Don't have an account?{' '}
                 <Link to="/register" className="text-primary hover:underline">
                   Register
                 </Link>
               </div>
-              
+
               <div className="text-center text-sm">
                 <Link to="/" className="text-muted-foreground hover:underline">
                   Back to home

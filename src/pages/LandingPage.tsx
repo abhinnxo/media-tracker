@@ -2,16 +2,16 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  BookOpen, Tv, Film, Bookmark, 
+import {
+  BookOpen, Tv, Film, Bookmark,
   Star, RefreshCw, LineChart, Search,
-  ArrowRight, ChevronRight, Clock, Flame, 
+  ArrowRight, ChevronRight, Clock, Flame,
   Heart, LayoutList
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Card, 
+import {
+  Card,
   CardContent,
   CardDescription,
   CardFooter,
@@ -54,8 +54,8 @@ const sampleMedia = {
 // Animation variants
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     y: 0,
     transition: { duration: 0.6 }
   }
@@ -169,7 +169,7 @@ const LandingPage: React.FC = () => {
                 </span>
               </Link>
             </div>
-            
+
             <div className="hidden md:flex items-center space-x-4">
               <Link to="#features" className="text-slate-600 hover:text-primary dark:text-slate-300 px-3 py-2 rounded-md text-sm font-medium">
                 Features
@@ -181,7 +181,7 @@ const LandingPage: React.FC = () => {
                 Testimonials
               </Link>
             </div>
-            
+
             <div className="flex items-center space-x-3">
               {user ? (
                 <Button asChild>
@@ -205,7 +205,7 @@ const LandingPage: React.FC = () => {
       {/* Hero Section */}
       <section className="pt-32 pb-20 md:pt-40 md:pb-28 px-4">
         <div className="container mx-auto max-w-6xl">
-          <motion.div 
+          <motion.div
             className="flex flex-col md:flex-row items-center gap-8 md:gap-12"
             initial="hidden"
             animate="visible"
@@ -217,23 +217,23 @@ const LandingPage: React.FC = () => {
                   All-in-one entertainment tracker
                 </span>
               </motion.div>
-              
-              <motion.h1 
+
+              <motion.h1
                 variants={fadeIn}
                 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-500"
               >
                 Your entire entertainment life, in one place
               </motion.h1>
-              
-              <motion.p 
+
+              <motion.p
                 variants={fadeIn}
                 className="text-lg md:text-xl text-slate-600 dark:text-slate-300 mb-8 max-w-xl mx-auto md:mx-0"
               >
-                Stop switching between apps to track what you watch and read. 
+                Stop switching between apps to track what you watch and read.
                 MediaTracker organizes your movies, shows, books, anime, and manga in one beautiful interface.
               </motion.p>
-              
-              <motion.div 
+
+              <motion.div
                 variants={fadeIn}
                 className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start"
               >
@@ -248,21 +248,21 @@ const LandingPage: React.FC = () => {
                 </Button>
               </motion.div>
             </div>
-            
-            <motion.div 
+
+            <motion.div
               variants={fadeIn}
               className="flex-1 relative"
             >
               <div className="relative max-w-md mx-auto">
                 <div className="absolute -left-4 -top-4 w-full h-full rounded-xl bg-gradient-to-r from-purple-600 to-blue-500 opacity-50 blur-xl"></div>
-                
+
                 <div className="relative z-10 grid grid-cols-2 gap-4">
                   <div className="space-y-4">
                     <div className="bg-white dark:bg-slate-800 shadow-lg rounded-xl overflow-hidden transform translate-y-8">
-                      <img 
-                        src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=500&h=280&auto=format&fit=crop&crop=entropy" 
-                        alt="Movie" 
-                        className="w-full h-32 object-cover" 
+                      <img
+                        src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=500&h=280&auto=format&fit=crop&crop=entropy"
+                        alt="Movie"
+                        className="w-full h-32 object-cover"
                       />
                       <div className="p-3">
                         <Badge>Movie</Badge>
@@ -270,10 +270,10 @@ const LandingPage: React.FC = () => {
                       </div>
                     </div>
                     <div className="bg-white dark:bg-slate-800 shadow-lg rounded-xl overflow-hidden">
-                      <img 
-                        src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=500&h=280&auto=format&fit=crop&crop=entropy" 
-                        alt="Book" 
-                        className="w-full h-32 object-cover" 
+                      <img
+                        src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=500&h=280&auto=format&fit=crop&crop=entropy"
+                        alt="Book"
+                        className="w-full h-32 object-cover"
                       />
                       <div className="p-3">
                         <Badge>Book</Badge>
@@ -283,10 +283,10 @@ const LandingPage: React.FC = () => {
                   </div>
                   <div className="space-y-4">
                     <div className="bg-white dark:bg-slate-800 shadow-lg rounded-xl overflow-hidden">
-                      <img 
-                        src="https://images.unsplash.com/photo-1559108318-39ed452bb6c9?w=500&h=280&auto=format&fit=crop&crop=entropy" 
-                        alt="TV Show" 
-                        className="w-full h-32 object-cover" 
+                      <img
+                        src="https://images.unsplash.com/photo-1559108318-39ed452bb6c9?w=500&h=280&auto=format&fit=crop&crop=entropy"
+                        alt="TV Show"
+                        className="w-full h-32 object-cover"
                       />
                       <div className="p-3">
                         <Badge>TV Series</Badge>
@@ -294,10 +294,10 @@ const LandingPage: React.FC = () => {
                       </div>
                     </div>
                     <div className="bg-white dark:bg-slate-800 shadow-lg rounded-xl overflow-hidden transform translate-y-8">
-                      <img 
-                        src="https://images.unsplash.com/photo-1578632767115-351597cf2477?w=500&h=280&auto=format&fit=crop&crop=entropy" 
-                        alt="Anime" 
-                        className="w-full h-32 object-cover" 
+                      <img
+                        src="https://images.unsplash.com/photo-1578632767115-351597cf2477?w=500&h=280&auto=format&fit=crop&crop=entropy"
+                        alt="Anime"
+                        className="w-full h-32 object-cover"
                       />
                       <div className="p-3">
                         <Badge>Anime</Badge>
@@ -311,7 +311,7 @@ const LandingPage: React.FC = () => {
           </motion.div>
         </div>
       </section>
-      
+
       {/* Media Type Icons */}
       <section className="py-12 bg-white dark:bg-slate-900 border-y border-slate-200 dark:border-slate-800">
         <div className="container mx-auto">
@@ -362,10 +362,10 @@ const LandingPage: React.FC = () => {
               All your movies, TV shows, books, anime, and manga in one place with powerful organization tools.
             </p>
           </div>
-          
+
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {features.map((feature, index) => (
-              <motion.div 
+              <motion.div
                 key={index}
                 variants={fadeIn}
                 initial="hidden"
@@ -396,7 +396,7 @@ const LandingPage: React.FC = () => {
               Browse through our extensive catalog of entertainment across multiple formats.
             </p>
           </div>
-          
+
           <Tabs defaultValue="movies" className="w-full max-w-5xl mx-auto">
             <TabsList className="grid grid-cols-5 mb-8">
               <TabsTrigger value="movies" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-500 data-[state=active]:text-white">Movies</TabsTrigger>
@@ -405,17 +405,17 @@ const LandingPage: React.FC = () => {
               <TabsTrigger value="anime" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-500 data-[state=active]:text-white">Anime</TabsTrigger>
               <TabsTrigger value="manga" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-500 data-[state=active]:text-white">Manga</TabsTrigger>
             </TabsList>
-            
+
             {Object.entries(sampleMedia).map(([category, items]) => (
               <TabsContent key={category} value={category} className="mt-0">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {items.map((item) => (
                     <Card key={item.id} className="overflow-hidden hover:shadow-md transition-shadow">
                       <div className="aspect-[2/3] relative overflow-hidden">
-                        <img 
-                          src={item.image} 
-                          alt={item.title} 
-                          className="absolute inset-0 w-full h-full object-cover" 
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          className="absolute inset-0 w-full h-full object-cover"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent">
                           <div className="absolute bottom-4 left-4 right-4">
@@ -459,7 +459,7 @@ const LandingPage: React.FC = () => {
               </TabsContent>
             ))}
           </Tabs>
-          
+
           <div className="text-center mt-12">
             <Button size="lg" className="bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-700 hover:to-blue-600" asChild>
               <Link to="/register">
@@ -483,10 +483,10 @@ const LandingPage: React.FC = () => {
               Join thousands of entertainment enthusiasts who love organizing their watching and reading experience.
             </p>
           </div>
-          
+
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
             {testimonials.map((testimonial, index) => (
-              <motion.div 
+              <motion.div
                 key={index}
                 variants={fadeIn}
                 initial="hidden"
@@ -506,16 +506,16 @@ const LandingPage: React.FC = () => {
                     <p className="text-sm text-slate-500 dark:text-slate-400">{testimonial.role}</p>
                   </div>
                 </div>
-                
+
                 <div className="flex mb-4">
                   {[...Array(5)].map((_, i) => (
-                    <Star 
-                      key={i} 
-                      className={`h-4 w-4 ${i < testimonial.rating ? "text-yellow-400 fill-yellow-400" : "text-slate-300 dark:text-slate-700"}`} 
+                    <Star
+                      key={i}
+                      className={`h-4 w-4 ${i < testimonial.rating ? "text-yellow-400 fill-yellow-400" : "text-slate-300 dark:text-slate-700"}`}
                     />
                   ))}
                 </div>
-                
+
                 <p className="text-slate-600 dark:text-slate-300">"{testimonial.content}"</p>
               </motion.div>
             ))}
@@ -527,14 +527,14 @@ const LandingPage: React.FC = () => {
       <section className="py-20 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-500"></div>
         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-        
+
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center text-white">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to transform how you track your entertainment?</h2>
             <p className="text-xl text-white/80 mb-8">
               Join MediaTracker today and never lose track of what you're watching or reading again.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Button size="lg" className="bg-white text-purple-600 hover:bg-slate-100" asChild>
                 <Link to="/register">
@@ -542,14 +542,14 @@ const LandingPage: React.FC = () => {
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="text-white border-white hover:bg-white/10" asChild>
+              <Button size="lg" variant="outline" className="text-white border-white bg-transparent hover:bg-white/10" asChild>
                 <Link to="/login">
                   <span>Log In</span>
                   <ChevronRight className="ml-1 h-5 w-5" />
                 </Link>
               </Button>
             </div>
-            
+
             <p className="mt-6 text-sm text-white/70">
               No credit card required. Free account includes unlimited media tracking.
             </p>
@@ -571,7 +571,7 @@ const LandingPage: React.FC = () => {
                 <li><Link to="#" className="hover:text-white transition-colors">Manga</Link></li>
               </ul>
             </div>
-            
+
             <div>
               <h3 className="font-bold text-white mb-4">Features</h3>
               <ul className="space-y-2">
@@ -582,7 +582,7 @@ const LandingPage: React.FC = () => {
                 <li><Link to="#" className="hover:text-white transition-colors">Recommendations</Link></li>
               </ul>
             </div>
-            
+
             <div>
               <h3 className="font-bold text-white mb-4">Company</h3>
               <ul className="space-y-2">
@@ -592,7 +592,7 @@ const LandingPage: React.FC = () => {
                 <li><Link to="#" className="hover:text-white transition-colors">Contact</Link></li>
               </ul>
             </div>
-            
+
             <div>
               <h3 className="font-bold text-white mb-4">Legal</h3>
               <ul className="space-y-2">
@@ -602,7 +602,7 @@ const LandingPage: React.FC = () => {
               </ul>
             </div>
           </div>
-          
+
           <div className="border-t border-slate-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center gap-2 mb-4 md:mb-0">
               <div className="bg-gradient-to-r from-purple-600 to-blue-500 w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold">
@@ -610,7 +610,7 @@ const LandingPage: React.FC = () => {
               </div>
               <span className="text-lg font-bold text-white">MediaTracker</span>
             </div>
-            
+
             <p className="text-sm text-slate-400">
               &copy; {new Date().getFullYear()} MediaTracker. All rights reserved.
             </p>
