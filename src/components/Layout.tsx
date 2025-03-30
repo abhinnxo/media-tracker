@@ -1,187 +1,150 @@
 
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
+  SidebarProvider,
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarInset,
+  SidebarRail,
+} from "@/components/ui/sidebar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Link } from "react-router-dom"
 import { useAuth } from "@/contexts/AuthContext"
 import { useState, useEffect } from "react"
-import { Skeleton } from "@/components/ui/skeleton"
-import { cn } from "@/lib/utils"
-import { Menu, Search, Sun, Moon } from "lucide-react"
-import { Toggle } from "@/components/ui/toggle"
+import { Home, Library, Compass, User, LogOut, Sun, Moon } from "lucide-react"
 import { useTheme } from "next-themes"
 
 interface Props {
   children: React.ReactNode
 }
 
-// Create a simple ModeToggle component since it's missing
-const ModeToggle = () => {
-  const { theme, setTheme } = useTheme();
-  
-  return (
-    <div className="flex items-center space-x-2">
-      <Toggle
-        aria-label="Toggle theme"
-        pressed={theme === "dark"}
-        onPressedChange={() => setTheme(theme === "dark" ? "light" : "dark")}
-      >
-        {theme === "dark" ? (
-          <Sun className="h-4 w-4" />
-        ) : (
-          <Moon className="h-4 w-4" />
-        )}
-      </Toggle>
-    </div>
-  );
-};
-
 export const Layout: React.FC<Props> = ({ children }) => {
   const { user, signOut } = useAuth()
   const [isMounted, setIsMounted] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-
+  const { theme, setTheme } = useTheme();
+  
   useEffect(() => {
     setIsMounted(true)
-    // Simulate loading
-    const timer = setTimeout(() => {
-      setIsLoading(false)
-    }, 1000)
-    return () => clearTimeout(timer)
   }, [])
 
   if (!isMounted) {
     return null
   }
 
+  const menuItems = [
+    { icon: Home, label: "Home", href: "/home" },
+    { icon: Compass, label: "Explore", href: "/explore" },
+    { icon: Library, label: "Library", href: "/library" },
+  ];
+
+  const handleThemeToggle = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
+
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="container z-40 bg-background">
-        <div className="flex h-16 items-center justify-between py-2">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="mr-2 px-0 lg:hidden"
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="pr-0">
-              <SheetHeader>
-                <SheetTitle>Are you sure absolutely sure?</SheetTitle>
-                <SheetDescription>
-                  This action cannot be undone. This will permanently delete
-                  your account and remove your data from our servers.
-                </SheetDescription>
-              </SheetHeader>
-            </SheetContent>
-          </Sheet>
-          <Link to="/home">
-            <div className="hidden items-center space-x-2 lg:flex">
-              <span className="font-bold">MyMediaList</span>
-            </div>
-          </Link>
-          <div className="flex w-full items-center justify-between space-x-2 sm:w-auto">
-            <NavigationMenu>
-              <NavigationMenuList>
-                <NavigationMenuItem>
-                  <Link to="/home">
-                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                      Home
-                    </NavigationMenuLink>
-                  </Link>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <Link to="/explore">
-                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                      Explore
-                    </NavigationMenuLink>
-                  </Link>
-                </NavigationMenuItem>
-                <NavigationMenuItem>
-                  <Link to="/library">
-                    <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                      Library
-                    </NavigationMenuLink>
-                  </Link>
-                </NavigationMenuItem>
-              </NavigationMenuList>
-            </NavigationMenu>
-            <div className="items-center space-x-2 hidden md:flex">
-              <ModeToggle />
-              {isLoading ? (
-                <Skeleton className="h-10 w-[100px] rounded-full" />
-              ) : user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src="" alt={user?.email || "Avatar"} />
-                        <AvatarFallback>{user?.email?.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                    <DropdownMenuItem asChild>
-                      <Link to="/profile">Profile</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => {
-                        signOut()
-                      }}
-                    >
-                      Logout
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+    <SidebarProvider defaultOpen={true}>
+      <div className="flex min-h-screen w-full">
+        <Sidebar>
+          <SidebarHeader className="flex flex-col items-center justify-center py-6">
+            <Link to="/home" className="text-xl font-bold">
+              MyMediaList
+            </Link>
+          </SidebarHeader>
+          
+          <SidebarContent>
+            <SidebarGroup>
+              <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {menuItems.map((item) => (
+                    <SidebarMenuItem key={item.label}>
+                      <SidebarMenuButton asChild>
+                        <Link to={item.href}>
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.label}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+            
+            {user && (
+              <SidebarGroup>
+                <SidebarGroupLabel>Account</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton asChild>
+                        <Link to="/profile">
+                          <User className="h-4 w-4" />
+                          <span>Profile</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton onClick={signOut}>
+                        <LogOut className="h-4 w-4" />
+                        <span>Logout</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            )}
+          </SidebarContent>
+          
+          <SidebarFooter className="p-4">
+            {user ? (
+              <div className="flex items-center gap-2 p-2">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src="" alt={user?.email || "Avatar"} />
+                  <AvatarFallback>{user?.email?.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium">{user.email}</span>
+                </div>
+              </div>
+            ) : (
+              <Link to="/login">
+                <Button className="w-full">Login</Button>
+              </Link>
+            )}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={handleThemeToggle} 
+              className="mt-2"
+            >
+              {theme === "dark" ? (
+                <Sun className="h-4 w-4" />
               ) : (
-                <Link to="/login">
-                  <Button variant="outline" size="sm">
-                    Login
-                  </Button>
-                </Link>
+                <Moon className="h-4 w-4" />
               )}
+            </Button>
+          </SidebarFooter>
+        </Sidebar>
+        <SidebarRail />
+        <SidebarInset className="p-4 lg:p-6">
+          <main className="mx-auto w-full max-w-7xl">{children}</main>
+          <footer className="w-full border-t bg-background mt-10">
+            <div className="container flex flex-col items-center justify-center space-y-4 py-6 md:flex-row md:justify-between md:space-y-0">
+              <span className="text-sm text-muted-foreground">
+                © 2023 MyMediaList. All rights reserved.
+              </span>
             </div>
-          </div>
-        </div>
-      </header>
-      <main className="flex-1">{children}</main>
-      <footer className="w-full border-t bg-background">
-        <div className="container flex flex-col items-center justify-center space-y-4 py-6 md:flex-row md:justify-between md:space-y-0">
-          <span className="text-sm text-muted-foreground">
-            © 2023 MyMediaList. All rights reserved.
-          </span>
-        </div>
-      </footer>
-    </div>
-  )
-}
+          </footer>
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
+  );
+};

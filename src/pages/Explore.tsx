@@ -14,7 +14,7 @@ const Explore: React.FC = () => {
   return (
     <Layout>
       <AnimatedTransition variant="fadeIn">
-        <div className="container max-w-7xl mx-auto py-8 px-4">
+        <div className="container max-w-7xl mx-auto py-8">
           <h1 className="text-3xl font-bold mb-2">Explore Media</h1>
           <p className="text-muted-foreground mb-6">
             Search for movies, TV shows, anime, manga, and books to discover details and where to watch or read them.
