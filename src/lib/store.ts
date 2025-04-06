@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { MediaCategory, MediaItem, MediaStatus } from './types';
@@ -22,6 +21,7 @@ interface MediaStoreState {
   delete: (id: string) => Promise<void>;
   getAllTags: () => Promise<string[]>;
   add: (item: Omit<MediaItem, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => Promise<MediaItem>;
+  save: (item: Partial<MediaItem>) => Promise<MediaItem>;
 }
 
 export const mediaStore = create<MediaStoreState>()(
@@ -118,6 +118,51 @@ export const mediaStore = create<MediaStoreState>()(
         
         set({ items: [...get().items, newItem] });
         return newItem;
+      },
+      
+      save: async (item) => {
+        const now = new Date().toISOString();
+        
+        // If the item has an ID, it's an update
+        if (item.id) {
+          const updatedItems = get().items.map((existingItem) => {
+            if (existingItem.id === item.id) {
+              return { 
+                ...existingItem, 
+                ...item, 
+                updated_at: now 
+              };
+            }
+            return existingItem;
+          });
+          
+          set({ items: updatedItems });
+          return updatedItems.find((i) => i.id === item.id)!;
+        } 
+        // Otherwise, it's a new item
+        else {
+          const newItem: MediaItem = {
+            ...item as any,
+            id: uuidv4(),
+            created_at: now,
+            updated_at: now,
+            user_id: 'local-user',
+            // Initialize any required fields that might be missing
+            title: item.title || '',
+            description: item.description || null,
+            image_url: item.image_url || null,
+            category: item.category || MediaCategory.MOVIE,
+            status: item.status || MediaStatus.TO_CONSUME,
+            tags: item.tags || [],
+            rating: item.rating || null,
+            start_date: item.start_date || null,
+            end_date: item.end_date || null,
+            notes: item.notes || null,
+          };
+          
+          set({ items: [...get().items, newItem] });
+          return newItem;
+        }
       },
     }),
     {
