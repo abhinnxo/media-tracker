@@ -61,7 +61,7 @@ const Details: React.FC = () => {
         const item = await mediaStore.getById(id);
         if (item) {
           setMediaItem(item);
-          
+
           // Create detailed media search result for DetailedMediaView
           const detailedData: MediaSearchResult = {
             id: item.id,
@@ -73,7 +73,7 @@ const Details: React.FC = () => {
             creator: item.creator || undefined,
             genres: item.genres || undefined,
           };
-          
+
           setDetailedMedia(detailedData);
         } else {
           toast({
@@ -214,23 +214,7 @@ const Details: React.FC = () => {
           Back
         </Button>
 
-        <div className="grid grid-cols-1 md:grid-cols-[250px_1fr] gap-8">
-          <AnimatedTransition variant="slideRight" className="order-2 md:order-1">
-            <div className="rounded-xl overflow-hidden aspect-[2/3] bg-muted">
-              {mediaItem.image_url ? (
-                <img
-                  src={mediaItem.image_url}
-                  alt={mediaItem.title}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-secondary">
-                  {getCategoryIcon()}
-                </div>
-              )}
-            </div>
-          </AnimatedTransition>
-
+        <div className=" gap-8">
           <AnimatedTransition variant="slideUp" className="space-y-6 order-1 md:order-2">
             <div className="flex justify-between items-start">
               <div>
@@ -284,7 +268,7 @@ const Details: React.FC = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            
+
             {/* User's personal notes section */}
             {mediaItem.notes && (
               <div>
@@ -297,7 +281,7 @@ const Details: React.FC = () => {
                 </div>
               </div>
             )}
-            
+
             {/* Display detailed media information */}
             {detailedMedia && (
               <div className="mt-6">
