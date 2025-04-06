@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button"
 import { Link } from "react-router-dom"
 import { useAuth } from "@/contexts/AuthContext"
 import { useState, useEffect } from "react"
-import { Home, Library, Compass, User, LogOut, Sun, Moon } from "lucide-react"
+import { Home, Library, Compass, User, LogOut, Sun, Moon, FolderInput } from "lucide-react"
 import { useTheme } from "next-themes"
 
 interface Props {
@@ -79,27 +79,45 @@ export const Layout: React.FC<Props> = ({ children }) => {
             </SidebarGroup>
             
             {user && (
-              <SidebarGroup>
-                <SidebarGroupLabel>Account</SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild>
-                        <Link to="/profile">
-                          <User className="h-4 w-4" />
-                          <span>Profile</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton onClick={signOut}>
-                        <LogOut className="h-4 w-4" />
-                        <span>Logout</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
+              <>
+                <SidebarGroup>
+                  <SidebarGroupLabel>Tools</SidebarGroupLabel>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild>
+                          <Link to="/import">
+                            <FolderInput className="h-4 w-4" />
+                            <span>Import & Classify</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </SidebarGroup>
+                
+                <SidebarGroup>
+                  <SidebarGroupLabel>Account</SidebarGroupLabel>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton asChild>
+                          <Link to="/profile">
+                            <User className="h-4 w-4" />
+                            <span>Profile</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton onClick={signOut}>
+                          <LogOut className="h-4 w-4" />
+                          <span>Logout</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </SidebarGroup>
+              </>
             )}
           </SidebarContent>
           
