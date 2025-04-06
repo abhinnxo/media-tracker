@@ -23,13 +23,33 @@ import { useToast } from '@/hooks/use-toast';
 import { MediaCategory, MediaStatus } from '@/lib/types';
 import { mediaStore } from '@/lib/store';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Upload, FileType, Search, FileText, AlertCircle } from 'lucide-react';
+import { 
+  Upload, 
+  FileType, 
+  Search, 
+  FileText, 
+  AlertCircle, 
+  Edit,
+  Loader,
+  RefreshCw 
+} from 'lucide-react';
+import { MediaSearch } from '@/components/MediaSearch';
+import { MediaSearchResult, mediaApi } from '@/lib/api';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { Badge } from '@/components/ui/badge';
 
 interface DetectedMedia {
   id: string;
   title: string;
   type: MediaCategory;
   status: MediaStatus;
+  searched?: boolean;
+  searching?: boolean;
+  imageUrl?: string;
+  description?: string;
+  year?: string;
+  creator?: string;
+  genres?: string[];
 }
 
 const ImportMedia: React.FC = () => {
@@ -37,6 +57,7 @@ const ImportMedia: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [detectedMedia, setDetectedMedia] = useState<DetectedMedia[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [activeSearchId, setActiveSearchId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,7 +125,8 @@ const ImportMedia: React.FC = () => {
                 id: Math.random().toString(36).substring(2, 11),
                 title,
                 type: pattern.type,
-                status: MediaStatus.TO_CONSUME
+                status: MediaStatus.TO_CONSUME,
+                searched: false
               });
               matched = true;
               break;
@@ -123,7 +145,8 @@ const ImportMedia: React.FC = () => {
               id: Math.random().toString(36).substring(2, 11),
               title: line,
               type: MediaCategory.MOVIE, // Default to movie
-              status: MediaStatus.TO_CONSUME
+              status: MediaStatus.TO_CONSUME,
+              searched: false
             });
           }
         }
@@ -167,7 +190,7 @@ const ImportMedia: React.FC = () => {
   const handleTypeChange = (id: string, newType: MediaCategory) => {
     setDetectedMedia(prev => 
       prev.map(item => 
-        item.id === id ? { ...item, type: newType } : item
+        item.id === id ? { ...item, type: newType, searched: false } : item
       )
     );
     
@@ -194,15 +217,18 @@ const ImportMedia: React.FC = () => {
     try {
       await mediaStore.add({
         title: media.title,
-        description: null,
-        image_url: null,
+        description: media.description || null,
+        image_url: media.imageUrl || null,
         category: media.type,
         status: media.status,
         rating: null,
-        tags: [],
+        tags: media.genres || [],
         start_date: null,
         end_date: null,
         notes: null,
+        year: media.year || null,
+        creator: media.creator || null,
+        genres: media.genres || null,
       });
       
       // Remove from the list
@@ -224,6 +250,97 @@ const ImportMedia: React.FC = () => {
 
   const handleResearch = (title: string) => {
     window.open(`https://www.google.com/search?q=${encodeURIComponent(title)}`, '_blank');
+  };
+
+  const handleSearchAPI = async (media: DetectedMedia) => {
+    setActiveSearchId(media.id);
+    
+    // Update the media item to show it's searching
+    setDetectedMedia(prev => 
+      prev.map(item => 
+        item.id === media.id ? { ...item, searching: true } : item
+      )
+    );
+    
+    try {
+      const results = await mediaApi.search(media.title, media.type);
+      
+      if (results.length > 0) {
+        const firstResult = results[0];
+        
+        setDetectedMedia(prev => 
+          prev.map(item => 
+            item.id === media.id ? {
+              ...item,
+              searching: false,
+              searched: true,
+              title: firstResult.title,
+              imageUrl: firstResult.imageUrl,
+              description: firstResult.description,
+              year: firstResult.year,
+              creator: firstResult.creator,
+              genres: firstResult.genres,
+            } : item
+          )
+        );
+        
+        toast({
+          title: "Media found",
+          description: `Found detailed information for "${firstResult.title}"`,
+        });
+      } else {
+        setDetectedMedia(prev => 
+          prev.map(item => 
+            item.id === media.id ? { ...item, searching: false } : item
+          )
+        );
+        
+        toast({
+          title: "No results found",
+          description: `Couldn't find information for "${media.title}"`,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error searching API:", error);
+      
+      setDetectedMedia(prev => 
+        prev.map(item => 
+          item.id === media.id ? { ...item, searching: false } : item
+        )
+      );
+      
+      toast({
+        title: "Error",
+        description: "Failed to search for media information.",
+        variant: "destructive",
+      });
+    } finally {
+      setActiveSearchId(null);
+    }
+  };
+
+  const handleSelectMedia = (media: DetectedMedia, result: MediaSearchResult) => {
+    setDetectedMedia(prev => 
+      prev.map(item => 
+        item.id === media.id ? {
+          ...item,
+          title: result.title,
+          type: result.category,
+          imageUrl: result.imageUrl,
+          description: result.description,
+          year: result.year,
+          creator: result.creator,
+          genres: result.genres,
+          searched: true
+        } : item
+      )
+    );
+    
+    toast({
+      title: "Media selected",
+      description: `Selected "${result.title}" from search results`,
+    });
   };
 
   return (
@@ -283,71 +400,213 @@ const ImportMedia: React.FC = () => {
             {detectedMedia.length > 0 && (
               <div>
                 <h2 className="text-xl font-semibold mb-4">Detected Media ({detectedMedia.length})</h2>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-2">
                   {detectedMedia.map((media) => (
-                    <Card key={media.id}>
-                      <CardHeader>
-                        <CardTitle className="text-lg">{media.title}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="grid gap-4">
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <label className="text-sm font-medium mb-1 block">Media Type</label>
-                              <Select
-                                value={media.type}
-                                onValueChange={(value) => handleTypeChange(media.id, value as MediaCategory)}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value={MediaCategory.MOVIE}>Movie</SelectItem>
-                                  <SelectItem value={MediaCategory.TV_SERIES}>TV Series</SelectItem>
-                                  <SelectItem value={MediaCategory.ANIME}>Anime</SelectItem>
-                                  <SelectItem value={MediaCategory.BOOK}>Book</SelectItem>
-                                  <SelectItem value={MediaCategory.MANGA}>Manga</SelectItem>
-                                </SelectContent>
-                              </Select>
+                    <Card key={media.id} className="overflow-hidden">
+                      <div className="flex flex-col h-full">
+                        {media.searched ? (
+                          <div className="flex flex-col md:flex-row h-full">
+                            <div className="w-full md:w-1/3">
+                              <div className="relative aspect-[2/3] w-full">
+                                {media.imageUrl ? (
+                                  <img 
+                                    src={media.imageUrl} 
+                                    alt={media.title}
+                                    className="object-cover w-full h-full"
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).src = 'https://placehold.co/400x600?text=No+Image';
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-muted flex items-center justify-center">
+                                    No image available
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                            
-                            <div>
-                              <label className="text-sm font-medium mb-1 block">Status</label>
-                              <Select
-                                value={media.status}
-                                onValueChange={(value) => handleStatusChange(media.id, value as MediaStatus)}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value={MediaStatus.TO_CONSUME}>To Watch/Read</SelectItem>
-                                  <SelectItem value={MediaStatus.IN_PROGRESS}>In Progress</SelectItem>
-                                  <SelectItem value={MediaStatus.COMPLETED}>Completed</SelectItem>
-                                  <SelectItem value={MediaStatus.ON_HOLD}>On Hold</SelectItem>
-                                  <SelectItem value={MediaStatus.DROPPED}>Dropped</SelectItem>
-                                </SelectContent>
-                              </Select>
+                            <div className="flex flex-col flex-1 p-4">
+                              <h3 className="text-lg font-semibold mb-1">{media.title}</h3>
+                              
+                              <div className="flex flex-wrap gap-1 mb-2">
+                                <Badge variant="secondary">{media.type}</Badge>
+                                {media.year && <Badge variant="outline">{media.year}</Badge>}
+                              </div>
+                              
+                              {media.creator && (
+                                <p className="text-sm mb-2">
+                                  <span className="font-medium">
+                                    {media.type === MediaCategory.BOOK || media.type === MediaCategory.MANGA ? 'Author: ' : 'Director: '}
+                                  </span>
+                                  {media.creator}
+                                </p>
+                              )}
+                              
+                              {media.description && (
+                                <p className="text-sm text-muted-foreground mb-3 line-clamp-3">
+                                  {media.description}
+                                </p>
+                              )}
+                              
+                              {media.genres && media.genres.length > 0 && (
+                                <div className="mb-3">
+                                  <p className="text-sm font-medium mb-1">Genres:</p>
+                                  <div className="flex flex-wrap gap-1">
+                                    {media.genres.map((genre, idx) => (
+                                      <Badge key={idx} variant="outline" className="text-xs">
+                                        {genre}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              <div className="grid grid-cols-2 gap-2 mt-auto">
+                                <div>
+                                  <label className="text-xs font-medium mb-1 block">Media Type</label>
+                                  <Select
+                                    value={media.type}
+                                    onValueChange={(value) => handleTypeChange(media.id, value as MediaCategory)}
+                                  >
+                                    <SelectTrigger className="h-8">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value={MediaCategory.MOVIE}>Movie</SelectItem>
+                                      <SelectItem value={MediaCategory.TV_SERIES}>TV Series</SelectItem>
+                                      <SelectItem value={MediaCategory.ANIME}>Anime</SelectItem>
+                                      <SelectItem value={MediaCategory.BOOK}>Book</SelectItem>
+                                      <SelectItem value={MediaCategory.MANGA}>Manga</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                
+                                <div>
+                                  <label className="text-xs font-medium mb-1 block">Status</label>
+                                  <Select
+                                    value={media.status}
+                                    onValueChange={(value) => handleStatusChange(media.id, value as MediaStatus)}
+                                  >
+                                    <SelectTrigger className="h-8">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value={MediaStatus.TO_CONSUME}>To Watch/Read</SelectItem>
+                                      <SelectItem value={MediaStatus.IN_PROGRESS}>In Progress</SelectItem>
+                                      <SelectItem value={MediaStatus.COMPLETED}>Completed</SelectItem>
+                                      <SelectItem value={MediaStatus.ON_HOLD}>On Hold</SelectItem>
+                                      <SelectItem value={MediaStatus.DROPPED}>Dropped</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </CardContent>
-                      <CardFooter className="flex justify-between">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleResearch(media.title)}
-                        >
-                          <Search className="h-4 w-4 mr-1" />
-                          Research
-                        </Button>
-                        <Button 
-                          size="sm"
-                          onClick={() => handleAddToLibrary(media)}
-                        >
-                          Add to Library
-                        </Button>
-                      </CardFooter>
+                        ) : (
+                          <CardHeader>
+                            <CardTitle className="text-lg">{media.title}</CardTitle>
+                          </CardHeader>
+                        )}
+                        
+                        {!media.searched && (
+                          <CardContent>
+                            <div className="grid gap-4">
+                              <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                  <label className="text-sm font-medium mb-1 block">Media Type</label>
+                                  <Select
+                                    value={media.type}
+                                    onValueChange={(value) => handleTypeChange(media.id, value as MediaCategory)}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value={MediaCategory.MOVIE}>Movie</SelectItem>
+                                      <SelectItem value={MediaCategory.TV_SERIES}>TV Series</SelectItem>
+                                      <SelectItem value={MediaCategory.ANIME}>Anime</SelectItem>
+                                      <SelectItem value={MediaCategory.BOOK}>Book</SelectItem>
+                                      <SelectItem value={MediaCategory.MANGA}>Manga</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                
+                                <div>
+                                  <label className="text-sm font-medium mb-1 block">Status</label>
+                                  <Select
+                                    value={media.status}
+                                    onValueChange={(value) => handleStatusChange(media.id, value as MediaStatus)}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value={MediaStatus.TO_CONSUME}>To Watch/Read</SelectItem>
+                                      <SelectItem value={MediaStatus.IN_PROGRESS}>In Progress</SelectItem>
+                                      <SelectItem value={MediaStatus.COMPLETED}>Completed</SelectItem>
+                                      <SelectItem value={MediaStatus.ON_HOLD}>On Hold</SelectItem>
+                                      <SelectItem value={MediaStatus.DROPPED}>Dropped</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+                              
+                              <MediaSearch 
+                                category={media.type}
+                                onSelect={(result) => handleSelectMedia(media, result)}
+                              />
+                            </div>
+                          </CardContent>
+                        )}
+                        
+                        <CardFooter className="flex justify-between pt-4">
+                          <div className="flex gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleResearch(media.title)}
+                            >
+                              <Search className="h-4 w-4 mr-1" />
+                              Research
+                            </Button>
+                            
+                            {media.searched ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleSearchAPI(media)}
+                                disabled={media.searching || activeSearchId === media.id}
+                              >
+                                {media.searching ? (
+                                  <Loader className="h-4 w-4 mr-1 animate-spin" />
+                                ) : (
+                                  <RefreshCw className="h-4 w-4 mr-1" />
+                                )}
+                                Rescan
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleSearchAPI(media)}
+                                disabled={media.searching || activeSearchId === media.id}
+                              >
+                                {media.searching ? (
+                                  <Loader className="h-4 w-4 mr-1 animate-spin" />
+                                ) : (
+                                  <Search className="h-4 w-4 mr-1" />
+                                )}
+                                Search API
+                              </Button>
+                            )}
+                          </div>
+                          <Button 
+                            size="sm"
+                            onClick={() => handleAddToLibrary(media)}
+                          >
+                            Add to Library
+                          </Button>
+                        </CardFooter>
+                      </div>
                     </Card>
                   ))}
                 </div>

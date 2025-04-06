@@ -30,6 +30,9 @@ export interface MediaItem {
   created_at: string;
   updated_at: string;
   user_id: string;
+  year?: string | null;
+  creator?: string | null;
+  genres?: string[] | null;
 }
 
 export interface MediaFilterOptions {
