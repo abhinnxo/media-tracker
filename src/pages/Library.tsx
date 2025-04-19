@@ -10,6 +10,13 @@ import { Input } from '@/components/ui/input';
 import { LayoutGrid, LayoutList, Plus, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Library: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -79,72 +86,51 @@ const Library: React.FC = () => {
             </p>
           </div>
           
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-            >
-              {viewMode === 'grid' ? <LayoutList size={16} /> : <LayoutGrid size={16} />}
-            </Button>
-            
-            <Button asChild>
-              <Link to="/add" className="flex items-center">
-                <Plus className="mr-1 h-4 w-4" /> Add New Media
-              </Link>
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+          >
+            {viewMode === 'grid' ? <LayoutList size={16} /> : <LayoutGrid size={16} />}
+          </Button>
         </AnimatedTransition>
         
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search your library..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-            >
-              {viewMode === 'grid' ? <LayoutList size={16} /> : <LayoutGrid size={16} />}
-            </Button>
-            
-            <Button asChild>
-              <Link to="/add" className="flex items-center">
-                <Plus className="mr-1 h-4 w-4" /> Add New Media
-              </Link>
-            </Button>
-          </div>
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search your library..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
         </div>
         
-        <Tabs value={selectedCategory} onValueChange={(value) => setSelectedCategory(value as MediaCategory | 'all')} className="w-full">
-          <TabsList className="w-full justify-start">
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value={MediaCategory.MOVIE}>Movies</TabsTrigger>
-            <TabsTrigger value={MediaCategory.TV_SERIES}>TV Series</TabsTrigger>
-            <TabsTrigger value={MediaCategory.ANIME}>Anime</TabsTrigger>
-            <TabsTrigger value={MediaCategory.BOOK}>Books</TabsTrigger>
-            <TabsTrigger value={MediaCategory.MANGA}>Manga</TabsTrigger>
-          </TabsList>
-        </Tabs>
-        
-        <Tabs value={selectedStatus} onValueChange={(value) => setSelectedStatus(value as MediaStatus | 'all')} className="w-full">
-          <TabsList className="w-full justify-start">
-            <TabsTrigger value="all">All Status</TabsTrigger>
-            <TabsTrigger value={MediaStatus.TO_CONSUME}>To Watch/Read</TabsTrigger>
-            <TabsTrigger value={MediaStatus.IN_PROGRESS}>In Progress</TabsTrigger>
-            <TabsTrigger value={MediaStatus.COMPLETED}>Completed</TabsTrigger>
-            <TabsTrigger value={MediaStatus.ON_HOLD}>On Hold</TabsTrigger>
-            <TabsTrigger value={MediaStatus.DROPPED}>Dropped</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="flex items-center justify-between gap-4">
+          <Tabs value={selectedCategory} onValueChange={(value) => setSelectedCategory(value as MediaCategory | 'all')} className="flex-1">
+            <TabsList className="w-full justify-start">
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value={MediaCategory.MOVIE}>Movies</TabsTrigger>
+              <TabsTrigger value={MediaCategory.TV_SERIES}>TV Series</TabsTrigger>
+              <TabsTrigger value={MediaCategory.ANIME}>Anime</TabsTrigger>
+              <TabsTrigger value={MediaCategory.BOOK}>Books</TabsTrigger>
+              <TabsTrigger value={MediaCategory.MANGA}>Manga</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          
+          <Select value={selectedStatus} onValueChange={(value) => setSelectedStatus(value as MediaStatus | 'all')}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value={MediaStatus.TO_CONSUME}>To Watch/Read</SelectItem>
+              <SelectItem value={MediaStatus.IN_PROGRESS}>In Progress</SelectItem>
+              <SelectItem value={MediaStatus.COMPLETED}>Completed</SelectItem>
+              <SelectItem value={MediaStatus.ON_HOLD}>On Hold</SelectItem>
+              <SelectItem value={MediaStatus.DROPPED}>Dropped</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         
         {mediaItems.length === 0 ? (
           <EmptyState />
