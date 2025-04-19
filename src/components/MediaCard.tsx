@@ -5,13 +5,19 @@ import { StatusBadge } from './StatusBadge';
 import { Book, Film, Tv, Star } from 'lucide-react';
 import { AnimatedTransition } from './AnimatedTransition';
 import { cn } from '@/lib/utils';
+import { Button } from './ui/button';
 
 interface MediaCardProps {
   item: MediaItem;
   delay?: number;
+  variant?: 'grid' | 'list';
 }
 
-export const MediaCard: React.FC<MediaCardProps> = ({ item, delay = 0 }) => {
+export const MediaCard: React.FC<MediaCardProps> = ({ 
+  item, 
+  delay = 0,
+  variant = 'grid' 
+}) => {
   // Category icon mapping
   const CategoryIcon = {
     [MediaCategory.MOVIE]: Film,
@@ -30,16 +36,70 @@ export const MediaCard: React.FC<MediaCardProps> = ({ item, delay = 0 }) => {
     [MediaCategory.MANGA]: 'Manga',
   };
 
-  // Format date for display
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
+  if (variant === 'list') {
+    return (
+      <AnimatedTransition
+        variant="slideUp"
+        delay={delay * 0.05}
+        className="hover-lift"
+      >
+        <Link
+          to={`/details/${item.id}`}
+          className="block"
+        >
+          <div className="bg-card rounded-xl overflow-hidden border border-border hover:border-primary/30 hover:shadow-md transition-all-200">
+            <div className="flex p-4 gap-4">
+              <div className="w-[100px] aspect-[2/3] relative overflow-hidden bg-muted rounded-md flex-shrink-0">
+                {item.image_url ? (
+                  <img
+                    src={item.image_url}
+                    alt={item.title}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-secondary">
+                    <CategoryIcon size={32} className="text-muted-foreground/40" />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center text-xs text-muted-foreground mb-1">
+                  <CategoryIcon size={12} className="mr-1" />
+                  <span>{categoryLabels[item.category]}</span>
+                </div>
+
+                <h3 className="font-medium text-lg leading-tight mb-2">{item.title}</h3>
+
+                <StatusBadge status={item.status} size="sm" className="mb-2" />
+
+                {item.rating !== null && (
+                  <div className="flex items-center text-amber-500 text-sm mb-2">
+                    <Star size={14} className="mr-1 fill-amber-500" />
+                    <span>{item.rating}/10</span>
+                  </div>
+                )}
+
+                {item.tags && item.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {item.tags.map(tag => (
+                      <span
+                        key={tag}
+                        className="text-xs px-1.5 py-0.5 rounded bg-secondary text-muted-foreground"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </Link>
+      </AnimatedTransition>
+    );
+  }
 
   return (
     <AnimatedTransition

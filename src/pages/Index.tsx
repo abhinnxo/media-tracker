@@ -6,7 +6,7 @@ import { mediaStore } from '@/lib/store';
 import { MediaCard } from '@/components/MediaCard';
 import { AnimatedTransition } from '@/components/AnimatedTransition';
 import { EmptyState } from '@/components/EmptyState';
-import { ArrowRight, PlayCircle, CheckCircle, Clock } from 'lucide-react';
+import { ArrowRight, PlayCircle, CheckCircle, Clock, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Index: React.FC = () => {
@@ -60,10 +60,19 @@ const Index: React.FC = () => {
     <Layout>
       <div className="space-y-10">
         <AnimatedTransition variant="fadeIn">
-          <h1 className="text-3xl font-semibold mb-1">Your Media Dashboard</h1>
-          <p className="text-muted-foreground mb-8">
-            Track, organize, and discover all your favorite media
-          </p>
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="text-3xl font-semibold mb-1">Your Media Dashboard</h1>
+              <p className="text-muted-foreground">
+                Track, organize, and discover all your favorite media
+              </p>
+            </div>
+            <Button asChild>
+              <Link to="/add" className="flex items-center">
+                <Plus className="mr-1 h-4 w-4" /> Add Media
+              </Link>
+            </Button>
+          </div>
         </AnimatedTransition>
 
         {!hasAnyMedia ? (

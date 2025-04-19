@@ -1,4 +1,3 @@
-
 export enum MediaCategory {
   MOVIE = "movie",
   TV_SERIES = "tv-series",
@@ -30,6 +29,9 @@ export interface MediaItem {
   created_at: string;
   updated_at: string;
   user_id: string;
+  year?: string;
+  creator?: string;
+  genres?: string[];
 }
 
 export interface MediaFilterOptions {
