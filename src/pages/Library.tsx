@@ -1,14 +1,13 @@
-
 import React, { useEffect, useState } from 'react';
 import { Layout } from '@/components/Layout';
-import { MediaItem, MediaFilterOptions, MediaCategory } from '@/lib/types';
+import { MediaItem, MediaFilterOptions, MediaCategory, MediaStatus } from '@/lib/types';
 import { mediaStore } from '@/lib/store';
 import { MediaCard } from '@/components/MediaCard';
-import { MediaFilters } from '@/components/MediaFilters';
 import { EmptyState } from '@/components/EmptyState';
 import { AnimatedTransition } from '@/components/AnimatedTransition';
 import { Button } from '@/components/ui/button';
-import { LayoutGrid, LayoutList, Plus } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { LayoutGrid, LayoutList, Plus, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -16,9 +15,10 @@ const Library: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [filteredItems, setFilteredItems] = useState<MediaItem[]>([]);
-  const [filters, setFilters] = useState<MediaFilterOptions>({});
+  const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedCategory, setSelectedCategory] = useState<MediaCategory | 'all'>('all');
+  const [selectedStatus, setSelectedStatus] = useState<MediaStatus | 'all'>('all');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -36,27 +36,27 @@ const Library: React.FC = () => {
     fetchData();
   }, []);
 
-  const handleFilterChange = async (newFilters: MediaFilterOptions) => {
-    setFilters(newFilters);
-    try {
-      const filtered = await mediaStore.filter(newFilters);
-      setFilteredItems(filtered);
-    } catch (error) {
-      console.error('Error filtering media items:', error);
-    }
-  };
-
-  const handleCategoryChange = (category: string) => {
-    const newCategory = category as MediaCategory | 'all';
-    setSelectedCategory(newCategory);
+  useEffect(() => {
+    let filtered = [...mediaItems];
     
-    if (newCategory === 'all') {
-      setFilteredItems(mediaItems);
-    } else {
-      const filtered = mediaItems.filter(item => item.category === newCategory);
-      setFilteredItems(filtered);
+    if (searchQuery) {
+      filtered = filtered.filter(item => 
+        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.creator?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
     }
-  };
+    
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(item => item.category === selectedCategory);
+    }
+    
+    if (selectedStatus !== 'all') {
+      filtered = filtered.filter(item => item.status === selectedStatus);
+    }
+    
+    setFilteredItems(filtered);
+  }, [mediaItems, searchQuery, selectedCategory, selectedStatus]);
 
   if (isLoading) {
     return (
@@ -84,7 +84,6 @@ const Library: React.FC = () => {
               variant="outline"
               size="icon"
               onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-              className="mr-2"
             >
               {viewMode === 'grid' ? <LayoutList size={16} /> : <LayoutGrid size={16} />}
             </Button>
@@ -97,8 +96,35 @@ const Library: React.FC = () => {
           </div>
         </AnimatedTransition>
         
-        {/* Category Tabs */}
-        <Tabs value={selectedCategory} onValueChange={handleCategoryChange} className="w-full">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search your library..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+            >
+              {viewMode === 'grid' ? <LayoutList size={16} /> : <LayoutGrid size={16} />}
+            </Button>
+            
+            <Button asChild>
+              <Link to="/add" className="flex items-center">
+                <Plus className="mr-1 h-4 w-4" /> Add New Media
+              </Link>
+            </Button>
+          </div>
+        </div>
+        
+        <Tabs value={selectedCategory} onValueChange={(value) => setSelectedCategory(value as MediaCategory | 'all')} className="w-full">
           <TabsList className="w-full justify-start">
             <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value={MediaCategory.MOVIE}>Movies</TabsTrigger>
@@ -109,7 +135,17 @@ const Library: React.FC = () => {
           </TabsList>
         </Tabs>
         
-        {/* Media Grid/List */}
+        <Tabs value={selectedStatus} onValueChange={(value) => setSelectedStatus(value as MediaStatus | 'all')} className="w-full">
+          <TabsList className="w-full justify-start">
+            <TabsTrigger value="all">All Status</TabsTrigger>
+            <TabsTrigger value={MediaStatus.TO_CONSUME}>To Watch/Read</TabsTrigger>
+            <TabsTrigger value={MediaStatus.IN_PROGRESS}>In Progress</TabsTrigger>
+            <TabsTrigger value={MediaStatus.COMPLETED}>Completed</TabsTrigger>
+            <TabsTrigger value={MediaStatus.ON_HOLD}>On Hold</TabsTrigger>
+            <TabsTrigger value={MediaStatus.DROPPED}>Dropped</TabsTrigger>
+          </TabsList>
+        </Tabs>
+        
         {mediaItems.length === 0 ? (
           <EmptyState />
         ) : filteredItems.length === 0 ? (

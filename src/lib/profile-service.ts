@@ -1,4 +1,3 @@
-
 import { supabase } from './supabase';
 import { Profile } from '@/lib/profile';
 

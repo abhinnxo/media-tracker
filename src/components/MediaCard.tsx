@@ -41,7 +41,7 @@ export const MediaCard: React.FC<MediaCardProps> = ({
       <AnimatedTransition
         variant="slideUp"
         delay={delay * 0.05}
-        className="hover-lift"
+        className="hover-lift group"
       >
         <Link
           to={`/details/${item.id}`}
@@ -81,8 +81,21 @@ export const MediaCard: React.FC<MediaCardProps> = ({
                   </div>
                 )}
 
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  {item.description && (
+                    <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
+                      {item.description}
+                    </p>
+                  )}
+                  {item.creator && (
+                    <p className="text-xs text-muted-foreground">
+                      Creator: {item.creator}
+                    </p>
+                  )}
+                </div>
+
                 {item.tags && item.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-1 mt-2">
                     {item.tags.map(tag => (
                       <span
                         key={tag}
@@ -105,7 +118,7 @@ export const MediaCard: React.FC<MediaCardProps> = ({
     <AnimatedTransition
       variant="slideUp"
       delay={delay * 0.05}
-      className="hover-lift"
+      className="hover-lift group"
     >
       <Link
         to={`/details/${item.id}`}
@@ -126,7 +139,21 @@ export const MediaCard: React.FC<MediaCardProps> = ({
               </div>
             )}
 
-            {/* Status badge positioned absolutely */}
+            <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity p-4 overflow-y-auto">
+              <div className="text-white space-y-2">
+                {item.description && (
+                  <p className="text-sm line-clamp-6">
+                    {item.description}
+                  </p>
+                )}
+                {item.creator && (
+                  <p className="text-xs">
+                    Creator: {item.creator}
+                  </p>
+                )}
+              </div>
+            </div>
+
             <div className="absolute top-2 right-2">
               <StatusBadge status={item.status} size="sm" showText={false} />
             </div>
