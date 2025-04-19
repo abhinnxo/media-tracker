@@ -20,7 +20,6 @@ import {
 } from '@/components/ui/card';
 import {
   ChartPie,
-  ChartDonut,
   ChartLine,
   ChartBar,
   Plus,
@@ -28,17 +27,17 @@ import {
   Star,
   LayoutDashboard
 } from 'lucide-react';
-import { 
-  ResponsiveContainer, 
-  PieChart, 
-  Pie, 
-  Cell, 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   Legend,
   LineChart,
   Line
@@ -99,13 +98,13 @@ const Index: React.FC = () => {
     Object.values(MediaCategory).forEach(category => {
       categoryCount[category] = 0;
     });
-    
+
     items.forEach(item => {
       if (item.category) {
         categoryCount[item.category] = (categoryCount[item.category] || 0) + 1;
       }
     });
-    
+
     const categoryChartData = Object.entries(categoryCount)
       .filter(([_, count]) => count > 0)
       .map(([category, count]) => ({
@@ -120,13 +119,13 @@ const Index: React.FC = () => {
     Object.values(MediaStatus).forEach(status => {
       statusCount[status] = 0;
     });
-    
+
     items.forEach(item => {
       if (item.status) {
         statusCount[item.status] = (statusCount[item.status] || 0) + 1;
       }
     });
-    
+
     const statusChartData = Object.entries(statusCount)
       .filter(([_, count]) => count > 0)
       .map(([status, count]) => ({
@@ -150,7 +149,7 @@ const Index: React.FC = () => {
         try {
           const createdDate = parseISO(item.created_at);
           const monthKey = format(createdDate, 'MMM yyyy');
-          
+
           if (monthlyActivity[monthKey] !== undefined) {
             monthlyActivity[monthKey] += 1;
           }
@@ -316,8 +315,8 @@ const Index: React.FC = () => {
                 <ChartPie className="h-5 w-5 text-muted-foreground" />
               </CardHeader>
               <CardContent className="pt-2">
-                <ChartContainer 
-                  className="h-[200px]" 
+                <ChartContainer
+                  className="h-[200px]"
                   config={{
                     media: { theme: { light: '#f472b6', dark: '#f472b6' } }
                   }}
@@ -334,9 +333,9 @@ const Index: React.FC = () => {
                       labelLine={false}
                     >
                       {categoryData.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={MEDIA_COLORS[entry.category] || `hsl(${index * 45}, 70%, 60%)`} 
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={MEDIA_COLORS[entry.category] || `hsl(${index * 45}, 70%, 60%)`}
                         />
                       ))}
                     </Pie>
@@ -354,7 +353,7 @@ const Index: React.FC = () => {
                   <CardTitle className="text-lg font-medium">Completion Status</CardTitle>
                   <CardDescription>Media status breakdown</CardDescription>
                 </div>
-                <ChartDonut className="h-5 w-5 text-muted-foreground" />
+                <ChartPie className="h-5 w-5 text-muted-foreground" />
               </CardHeader>
               <CardContent className="pt-2">
                 <ChartContainer className="h-[200px]" config={{}}>
@@ -371,9 +370,9 @@ const Index: React.FC = () => {
                       labelLine={false}
                     >
                       {statusData.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={STATUS_COLORS[entry.status] || `hsl(${index * 45}, 70%, 60%)`} 
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={STATUS_COLORS[entry.status] || `hsl(${index * 45}, 70%, 60%)`}
                         />
                       ))}
                     </Pie>
@@ -433,16 +432,16 @@ const Index: React.FC = () => {
                   >
                     <CartesianGrid strokeDasharray="3 3" opacity={0.3} horizontal={false} />
                     <XAxis type="number" />
-                    <YAxis 
-                      dataKey="name" 
-                      type="category" 
-                      width={90} 
+                    <YAxis
+                      dataKey="name"
+                      type="category"
+                      width={90}
                       tick={{ fontSize: 12 }}
                     />
                     <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar 
-                      dataKey="value" 
-                      fill="#0ea5e9" 
+                    <Bar
+                      dataKey="value"
+                      fill="#0ea5e9"
                       name="Count"
                       barSize={30}
                       radius={[0, 4, 4, 0]}
@@ -468,20 +467,20 @@ const Index: React.FC = () => {
                     margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" opacity={0.3} vertical={false} />
-                    <XAxis 
-                      dataKey="rating" 
-                      tick={{ fontSize: 12 }} 
+                    <XAxis
+                      dataKey="rating"
+                      tick={{ fontSize: 12 }}
                       tickFormatter={(value) => `${value}★`}
                     />
                     <YAxis width={30} />
-                    <ChartTooltip 
-                      formatter={(value, name) => [`${value} items`, `${name} stars`]} 
+                    <ChartTooltip
+                      formatter={(value, name) => [`${value} items`, `${name} stars`]}
                       content={<ChartTooltipContent />}
                     />
-                    <Bar 
-                      dataKey="count" 
+                    <Bar
+                      dataKey="count"
                       name="Rating"
-                      fill="#f97316" 
+                      fill="#f97316"
                       barSize={40}
                       radius={[4, 4, 0, 0]}
                     />
@@ -502,11 +501,11 @@ const Index: React.FC = () => {
               <CardContent className="pt-2">
                 <div className="flex flex-wrap gap-2 pt-4">
                   {tagData.map((tag, index) => (
-                    <div 
+                    <div
                       key={index}
                       className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm"
-                      style={{ 
-                        fontSize: `${Math.max(0.7, Math.min(1.5, 0.8 + (tag.value / Math.max(...tagData.map(t => t.value)) * 0.7)))}rem` 
+                      style={{
+                        fontSize: `${Math.max(0.7, Math.min(1.5, 0.8 + (tag.value / Math.max(...tagData.map(t => t.value)) * 0.7)))}rem`
                       }}
                     >
                       {tag.text} ({tag.value})
@@ -537,26 +536,26 @@ const Index: React.FC = () => {
                   >
                     <CartesianGrid strokeDasharray="3 3" opacity={0.3} vertical={false} />
                     <XAxis dataKey="category" tick={{ fontSize: 12 }} />
-                    <YAxis 
-                      domain={[0, 5]} 
-                      ticks={[0, 1, 2, 3, 4, 5]} 
+                    <YAxis
+                      domain={[0, 5]}
+                      ticks={[0, 1, 2, 3, 4, 5]}
                       width={30}
                     />
-                    <ChartTooltip 
+                    <ChartTooltip
                       formatter={(value) => [`${value} / 5`, "Avg Rating"]}
                       content={<ChartTooltipContent />}
                     />
-                    <Bar 
-                      dataKey="rating" 
+                    <Bar
+                      dataKey="rating"
                       name="Avg Rating"
-                      fill="#8b5cf6" 
+                      fill="#8b5cf6"
                       barSize={60}
                       radius={[4, 4, 0, 0]}
                     >
                       {averageRatingData.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={MEDIA_COLORS[entry.category as unknown as MediaCategory] || "#8b5cf6"} 
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={MEDIA_COLORS[entry.category as unknown as MediaCategory] || "#8b5cf6"}
                         />
                       ))}
                     </Bar>
