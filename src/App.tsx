@@ -38,17 +38,47 @@ const App = () => (
           <BrowserRouter>
             <AnimatePresence mode="wait">
               <Routes>
-                {/* Public routes */}
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/home" element={<Index />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/update-password" element={<UpdatePassword />} />
-                <Route path="/user/:username" element={<UserProfile />} />
-                <Route path="/explore" element={<Explore />} />
-                
-                {/* Protected routes */}
+                {/* All routes are now protected, but public routes are accessible */}
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <LandingPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/home" element={
+                  <ProtectedRoute>
+                    <Index />
+                  </ProtectedRoute>
+                } />
+                <Route path="/login" element={
+                  <ProtectedRoute>
+                    <Login />
+                  </ProtectedRoute>
+                } />
+                <Route path="/register" element={
+                  <ProtectedRoute>
+                    <Register />
+                  </ProtectedRoute>
+                } />
+                <Route path="/reset-password" element={
+                  <ProtectedRoute>
+                    <ResetPassword />
+                  </ProtectedRoute>
+                } />
+                <Route path="/update-password" element={
+                  <ProtectedRoute>
+                    <UpdatePassword />
+                  </ProtectedRoute>
+                } />
+                <Route path="/user/:username" element={
+                  <ProtectedRoute>
+                    <UserProfile />
+                  </ProtectedRoute>
+                } />
+                <Route path="/explore" element={
+                  <ProtectedRoute>
+                    <Explore />
+                  </ProtectedRoute>
+                } />
                 <Route path="/library" element={
                   <ProtectedRoute>
                     <Library />
@@ -81,7 +111,11 @@ const App = () => (
                 } />
                 
                 {/* Catch-all route */}
-                <Route path="*" element={<NotFound />} />
+                <Route path="*" element={
+                  <ProtectedRoute>
+                    <NotFound />
+                  </ProtectedRoute>
+                } />
               </Routes>
             </AnimatePresence>
           </BrowserRouter>

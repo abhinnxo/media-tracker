@@ -185,6 +185,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       title: "Logged out",
       description: "You have been successfully logged out.",
     });
+    
+    window.location.href = '/login';
   };
 
   const requestPasswordReset = async (email: string) => {

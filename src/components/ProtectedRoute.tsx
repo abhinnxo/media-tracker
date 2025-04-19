@@ -1,14 +1,19 @@
 
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
+const PUBLIC_ROUTES = ['/', '/login', '/register', '/reset-password', '/update-password'];
+const USER_ROUTE_REGEX = /^\/user\/.*/;
+
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, loading } = useAuth();
+  const location = useLocation();
+  const isPublicRoute = PUBLIC_ROUTES.includes(location.pathname) || USER_ROUTE_REGEX.test(location.pathname);
 
   if (loading) {
     return (
@@ -18,7 +23,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  if (!user) {
+  if (!user && !isPublicRoute) {
     return <Navigate to="/login" replace />;
   }
 
