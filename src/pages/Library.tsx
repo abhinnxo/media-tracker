@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Layout } from '@/components/Layout';
 import { MediaItem, MediaFilterOptions, MediaCategory, MediaStatus } from '@/lib/types';
@@ -86,13 +87,20 @@ const Library: React.FC = () => {
             </p>
           </div>
           
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-          >
-            {viewMode === 'grid' ? <LayoutList size={16} /> : <LayoutGrid size={16} />}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button asChild>
+              <Link to="/add" className="flex items-center">
+                <Plus className="mr-1 h-4 w-4" /> Add Media
+              </Link>
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+            >
+              {viewMode === 'grid' ? <LayoutList size={16} /> : <LayoutGrid size={16} />}
+            </Button>
+          </div>
         </AnimatedTransition>
         
         <div className="relative flex-1">
