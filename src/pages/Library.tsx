@@ -78,28 +78,30 @@ const Library: React.FC = () => {
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <AnimatedTransition variant="fadeIn" className="flex flex-col md:flex-row justify-between md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-semibold mb-1">Your Library</h1>
-            <p className="text-muted-foreground">
-              {mediaItems.length} {mediaItems.length === 1 ? 'item' : 'items'} in your collection
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Button asChild>
-              <Link to="/add" className="flex items-center">
-                <Plus className="mr-1 h-4 w-4" /> Add Media
-              </Link>
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-            >
-              {viewMode === 'grid' ? <LayoutList size={16} /> : <LayoutGrid size={16} />}
-            </Button>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-semibold mb-0 sm:mb-1">Your Library</h1>
+              <p className="text-sm sm:text-base text-muted-foreground">
+                {mediaItems.length} {mediaItems.length === 1 ? 'item' : 'items'} in your collection
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button asChild>
+                <Link to="/add" className="flex items-center">
+                  <Plus className="mr-1 h-4 w-4" /> Add Media
+                </Link>
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+                className="sm:flex hidden"
+              >
+                {viewMode === 'grid' ? <LayoutList size={16} /> : <LayoutGrid size={16} />}
+              </Button>
+            </div>
           </div>
         </AnimatedTransition>
         
@@ -113,31 +115,42 @@ const Library: React.FC = () => {
           />
         </div>
         
-        <div className="flex items-center justify-between gap-4">
-          <Tabs value={selectedCategory} onValueChange={(value) => setSelectedCategory(value as MediaCategory | 'all')} className="flex-1">
-            <TabsList className="w-full justify-start">
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value={MediaCategory.MOVIE}>Movies</TabsTrigger>
-              <TabsTrigger value={MediaCategory.TV_SERIES}>TV Series</TabsTrigger>
-              <TabsTrigger value={MediaCategory.ANIME}>Anime</TabsTrigger>
-              <TabsTrigger value={MediaCategory.BOOK}>Books</TabsTrigger>
-              <TabsTrigger value={MediaCategory.MANGA}>Manga</TabsTrigger>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <Tabs value={selectedCategory} onValueChange={(value) => setSelectedCategory(value as MediaCategory | 'all')} 
+                className="w-full overflow-x-auto">
+            <TabsList className="w-full sm:w-auto justify-start">
+              <TabsTrigger value="all" className="whitespace-nowrap">All</TabsTrigger>
+              <TabsTrigger value={MediaCategory.MOVIE} className="whitespace-nowrap">Movies</TabsTrigger>
+              <TabsTrigger value={MediaCategory.TV_SERIES} className="whitespace-nowrap">TV Series</TabsTrigger>
+              <TabsTrigger value={MediaCategory.ANIME} className="whitespace-nowrap">Anime</TabsTrigger>
+              <TabsTrigger value={MediaCategory.BOOK} className="whitespace-nowrap">Books</TabsTrigger>
+              <TabsTrigger value={MediaCategory.MANGA} className="whitespace-nowrap">Manga</TabsTrigger>
             </TabsList>
           </Tabs>
           
-          <Select value={selectedStatus} onValueChange={(value) => setSelectedStatus(value as MediaStatus | 'all')}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value={MediaStatus.TO_CONSUME}>To Watch/Read</SelectItem>
-              <SelectItem value={MediaStatus.IN_PROGRESS}>In Progress</SelectItem>
-              <SelectItem value={MediaStatus.COMPLETED}>Completed</SelectItem>
-              <SelectItem value={MediaStatus.ON_HOLD}>On Hold</SelectItem>
-              <SelectItem value={MediaStatus.DROPPED}>Dropped</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="w-full sm:w-auto flex items-center gap-2">
+            <Select value={selectedStatus} onValueChange={(value) => setSelectedStatus(value as MediaStatus | 'all')}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value={MediaStatus.TO_CONSUME}>To Watch/Read</SelectItem>
+                <SelectItem value={MediaStatus.IN_PROGRESS}>In Progress</SelectItem>
+                <SelectItem value={MediaStatus.COMPLETED}>Completed</SelectItem>
+                <SelectItem value={MediaStatus.ON_HOLD}>On Hold</SelectItem>
+                <SelectItem value={MediaStatus.DROPPED}>Dropped</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+              className="sm:hidden flex"
+            >
+              {viewMode === 'grid' ? <LayoutList size={16} /> : <LayoutGrid size={16} />}
+            </Button>
+          </div>
         </div>
         
         {mediaItems.length === 0 ? (
@@ -151,7 +164,7 @@ const Library: React.FC = () => {
         ) : (
           <div className={
             viewMode === 'grid' 
-              ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6"
+              ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4 lg:gap-6"
               : "space-y-4"
           }>
             {filteredItems.map((item, index) => (

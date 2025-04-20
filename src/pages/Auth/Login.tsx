@@ -48,11 +48,11 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="h-screen flex items-center justify-center p-4 bg-muted/30">
-      <AnimatedTransition variant="fadeIn" className="w-full max-w-md">
-        <Card>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-muted/30">
+      <AnimatedTransition variant="fadeIn" className="w-full max-w-sm sm:max-w-md">
+        <Card className="w-full">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold">Login</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl font-bold">Login</CardTitle>
             <CardDescription>
               Enter your credentials to access your account
             </CardDescription>
@@ -85,7 +85,7 @@ const Login: React.FC = () => {
                   <Label htmlFor="password">Password</Label>
                   <Link
                     to="/reset-password"
-                    className="text-sm text-primary hover:underline"
+                    className="text-xs sm:text-sm text-primary hover:underline"
                   >
                     Forgot password?
                   </Link>
@@ -117,14 +117,14 @@ const Login: React.FC = () => {
                 )}
               </Button>
 
-              <div className="text-center text-sm">
+              <div className="text-center text-xs sm:text-sm">
                 Don't have an account?{' '}
                 <Link to="/register" className="text-primary hover:underline">
                   Register
                 </Link>
               </div>
 
-              <div className="text-center text-sm">
+              <div className="text-center text-xs sm:text-sm">
                 <Link to="/" className="text-muted-foreground hover:underline">
                   Back to home
                 </Link>

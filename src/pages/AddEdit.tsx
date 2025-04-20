@@ -44,11 +44,11 @@ const AddEdit: React.FC = () => {
   return (
     <Layout>
       <AnimatedTransition variant="fadeIn">
-        <div className="max-w-3xl mx-auto">
-          <h1 className="text-3xl font-semibold mb-6">
+        <div className="max-w-full sm:max-w-2xl md:max-w-3xl mx-auto px-4 sm:px-0">
+          <h1 className="text-2xl sm:text-3xl font-semibold mb-3 sm:mb-6">
             {id ? 'Edit Media' : 'Add New Media'}
           </h1>
-          <p className="text-muted-foreground mb-6">
+          <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
             {id ? 'Update the details of your media item below.' : 'Search for a media item or add details manually below.'}
           </p>
           <MediaForm initialData={mediaItem} />
