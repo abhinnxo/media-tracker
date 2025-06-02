@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
@@ -275,17 +274,17 @@ const Index: React.FC = () => {
 
   return (
     <Layout>
-      <div className="space-y-8">
+      <div className="space-y-6 sm:space-y-8">
         <AnimatedTransition variant="fadeIn">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 gap-4">
             <div>
-              <h1 className="text-3xl font-semibold mb-1">Media Dashboard</h1>
-              <p className="text-muted-foreground">
+              <h1 className="text-2xl sm:text-3xl font-semibold mb-1">Media Dashboard</h1>
+              <p className="text-muted-foreground text-sm sm:text-base">
                 Insights and statistics of your media collection
               </p>
             </div>
-            <Button asChild>
-              <Link to="/add" className="flex items-center">
+            <Button asChild className="w-full sm:w-auto">
+              <Link to="/add" className="flex items-center justify-center">
                 <Plus className="mr-1 h-4 w-4" /> Add Media
               </Link>
             </Button>
@@ -293,10 +292,10 @@ const Index: React.FC = () => {
         </AnimatedTransition>
 
         {!hasAnyMedia ? (
-          <div className="flex flex-col items-center justify-center text-center py-20">
-            <LayoutDashboard className="h-16 w-16 text-muted-foreground mb-4 opacity-50" />
-            <h2 className="text-2xl font-medium">No media data yet</h2>
-            <p className="text-muted-foreground mt-2 mb-6">
+          <div className="flex flex-col items-center justify-center text-center py-12 sm:py-20 px-4">
+            <LayoutDashboard className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground mb-4 opacity-50" />
+            <h2 className="text-xl sm:text-2xl font-medium">No media data yet</h2>
+            <p className="text-muted-foreground mt-2 mb-6 max-w-md">
               Add some movies, books, or shows to see your statistics here
             </p>
             <Button asChild>
@@ -304,33 +303,34 @@ const Index: React.FC = () => {
             </Button>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
             {/* Media Overview */}
-            <Card>
+            <Card className="col-span-1">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div>
-                  <CardTitle className="text-lg font-medium">Media Overview</CardTitle>
-                  <CardDescription>Distribution by media type</CardDescription>
+                  <CardTitle className="text-base sm:text-lg font-medium">Media Overview</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Distribution by media type</CardDescription>
                 </div>
-                <ChartPie className="h-5 w-5 text-muted-foreground" />
+                <ChartPie className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
               </CardHeader>
               <CardContent className="pt-2">
                 <ChartContainer
-                  className="h-[200px]"
+                  className="h-[250px] sm:h-[300px]"
                   config={{
                     media: { theme: { light: '#f472b6', dark: '#f472b6' } }
                   }}
                 >
-                  <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                  <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                     <Pie
                       data={categoryData}
                       dataKey="value"
                       nameKey="name"
                       cx="50%"
                       cy="50%"
-                      outerRadius={80}
+                      outerRadius="70%"
                       label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                       labelLine={false}
+                      fontSize={12}
                     >
                       {categoryData.map((entry, index) => (
                         <Cell
@@ -340,34 +340,35 @@ const Index: React.FC = () => {
                       ))}
                     </Pie>
                     <ChartTooltip content={<ChartTooltipContent />} />
-                    <Legend />
+                    <Legend wrapperStyle={{ fontSize: '12px' }} />
                   </PieChart>
                 </ChartContainer>
               </CardContent>
             </Card>
 
             {/* Completion Status */}
-            <Card>
+            <Card className="col-span-1">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div>
-                  <CardTitle className="text-lg font-medium">Completion Status</CardTitle>
-                  <CardDescription>Media status breakdown</CardDescription>
+                  <CardTitle className="text-base sm:text-lg font-medium">Completion Status</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Media status breakdown</CardDescription>
                 </div>
-                <ChartPie className="h-5 w-5 text-muted-foreground" />
+                <ChartPie className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
               </CardHeader>
               <CardContent className="pt-2">
-                <ChartContainer className="h-[200px]" config={{}}>
-                  <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                <ChartContainer className="h-[250px] sm:h-[300px]" config={{}}>
+                  <PieChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                     <Pie
                       data={statusData}
                       dataKey="value"
                       nameKey="name"
                       cx="50%"
                       cy="50%"
-                      innerRadius={40}
-                      outerRadius={80}
+                      innerRadius="35%"
+                      outerRadius="70%"
                       label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                       labelLine={false}
+                      fontSize={12}
                     >
                       {statusData.map((entry, index) => (
                         <Cell
@@ -377,37 +378,43 @@ const Index: React.FC = () => {
                       ))}
                     </Pie>
                     <ChartTooltip content={<ChartTooltipContent />} />
-                    <Legend />
+                    <Legend wrapperStyle={{ fontSize: '12px' }} />
                   </PieChart>
                 </ChartContainer>
               </CardContent>
             </Card>
 
             {/* Monthly Activity */}
-            <Card>
+            <Card className="col-span-1 lg:col-span-2 xl:col-span-1">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div>
-                  <CardTitle className="text-lg font-medium">Monthly Activity</CardTitle>
-                  <CardDescription>Media items added per month</CardDescription>
+                  <CardTitle className="text-base sm:text-lg font-medium">Monthly Activity</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Media items added per month</CardDescription>
                 </div>
-                <ChartLine className="h-5 w-5 text-muted-foreground" />
+                <ChartLine className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
               </CardHeader>
               <CardContent className="pt-2">
-                <ChartContainer className="h-[200px]" config={{}}>
+                <ChartContainer className="h-[250px] sm:h-[300px]" config={{}}>
                   <LineChart
                     data={monthlyActivityData}
-                    margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                    <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                    <YAxis width={30} />
+                    <XAxis 
+                      dataKey="name" 
+                      tick={{ fontSize: 10 }}
+                      angle={-45}
+                      textAnchor="end"
+                      height={60}
+                    />
+                    <YAxis width={40} tick={{ fontSize: 10 }} />
                     <ChartTooltip content={<ChartTooltipContent />} />
                     <Line
                       type="monotone"
                       dataKey="value"
                       stroke="#8b5cf6"
                       strokeWidth={2}
-                      activeDot={{ r: 8 }}
+                      activeDot={{ r: 6 }}
                     />
                   </LineChart>
                 </ChartContainer>
@@ -415,35 +422,35 @@ const Index: React.FC = () => {
             </Card>
 
             {/* Genre Breakdown */}
-            <Card className="lg:col-span-2">
+            <Card className="col-span-1 lg:col-span-2">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div>
-                  <CardTitle className="text-lg font-medium">Genre Breakdown</CardTitle>
-                  <CardDescription>Most common genres across all media</CardDescription>
+                  <CardTitle className="text-base sm:text-lg font-medium">Genre Breakdown</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Most common genres across all media</CardDescription>
                 </div>
-                <ChartBar className="h-5 w-5 text-muted-foreground" />
+                <ChartBar className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
               </CardHeader>
               <CardContent className="pt-2">
-                <ChartContainer className="h-[300px]" config={{}}>
+                <ChartContainer className="h-[300px] sm:h-[400px]" config={{}}>
                   <BarChart
                     layout="vertical"
                     data={genreData}
-                    margin={{ top: 10, right: 30, left: 100, bottom: 10 }}
+                    margin={{ top: 20, right: 30, left: 80, bottom: 20 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" opacity={0.3} horizontal={false} />
-                    <XAxis type="number" />
+                    <XAxis type="number" tick={{ fontSize: 10 }} />
                     <YAxis
                       dataKey="name"
                       type="category"
-                      width={90}
-                      tick={{ fontSize: 12 }}
+                      width={70}
+                      tick={{ fontSize: 10 }}
                     />
                     <ChartTooltip content={<ChartTooltipContent />} />
                     <Bar
                       dataKey="value"
                       fill="#0ea5e9"
                       name="Count"
-                      barSize={30}
+                      barSize={25}
                       radius={[0, 4, 4, 0]}
                     />
                   </BarChart>
@@ -452,27 +459,27 @@ const Index: React.FC = () => {
             </Card>
 
             {/* Rating Stats */}
-            <Card>
+            <Card className="col-span-1">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div>
-                  <CardTitle className="text-lg font-medium">Rating Distribution</CardTitle>
-                  <CardDescription>Frequency of each rating</CardDescription>
+                  <CardTitle className="text-base sm:text-lg font-medium">Rating Distribution</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Frequency of each rating</CardDescription>
                 </div>
-                <Star className="h-5 w-5 text-muted-foreground" />
+                <Star className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
               </CardHeader>
               <CardContent className="pt-2">
-                <ChartContainer className="h-[200px]" config={{}}>
+                <ChartContainer className="h-[250px] sm:h-[300px]" config={{}}>
                   <BarChart
                     data={ratingData}
-                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                    margin={{ top: 20, right: 20, left: 0, bottom: 20 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" opacity={0.3} vertical={false} />
                     <XAxis
                       dataKey="rating"
-                      tick={{ fontSize: 12 }}
+                      tick={{ fontSize: 10 }}
                       tickFormatter={(value) => `${value}★`}
                     />
-                    <YAxis width={30} />
+                    <YAxis width={30} tick={{ fontSize: 10 }} />
                     <ChartTooltip
                       formatter={(value, name) => [`${value} items`, `${name} stars`]}
                       content={<ChartTooltipContent />}
@@ -481,7 +488,7 @@ const Index: React.FC = () => {
                       dataKey="count"
                       name="Rating"
                       fill="#f97316"
-                      barSize={40}
+                      barSize={30}
                       radius={[4, 4, 0, 0]}
                     />
                   </BarChart>
@@ -490,22 +497,22 @@ const Index: React.FC = () => {
             </Card>
 
             {/* Top Tags */}
-            <Card className="md:col-span-2 lg:col-span-1">
+            <Card className="col-span-1 lg:col-span-2 xl:col-span-1">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div>
-                  <CardTitle className="text-lg font-medium">Top Tags</CardTitle>
-                  <CardDescription>Most used tags in your library</CardDescription>
+                  <CardTitle className="text-base sm:text-lg font-medium">Top Tags</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Most used tags in your library</CardDescription>
                 </div>
-                <Tag className="h-5 w-5 text-muted-foreground" />
+                <Tag className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
               </CardHeader>
               <CardContent className="pt-2">
-                <div className="flex flex-wrap gap-2 pt-4">
+                <div className="flex flex-wrap gap-2 pt-4 max-h-[200px] sm:max-h-[250px] overflow-y-auto">
                   {tagData.map((tag, index) => (
                     <div
                       key={index}
-                      className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm"
+                      className="bg-primary/10 text-primary px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm shrink-0"
                       style={{
-                        fontSize: `${Math.max(0.7, Math.min(1.5, 0.8 + (tag.value / Math.max(...tagData.map(t => t.value)) * 0.7)))}rem`
+                        fontSize: `${Math.max(0.65, Math.min(1.2, 0.75 + (tag.value / Math.max(...tagData.map(t => t.value)) * 0.45)))}rem`
                       }}
                     >
                       {tag.text} ({tag.value})
@@ -520,26 +527,33 @@ const Index: React.FC = () => {
             </Card>
 
             {/* Average Rating by Category */}
-            <Card className="col-span-3">
+            <Card className="col-span-1 lg:col-span-2 xl:col-span-3">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div>
-                  <CardTitle className="text-lg font-medium">Average Rating by Media Type</CardTitle>
-                  <CardDescription>How you rate different types of media</CardDescription>
+                  <CardTitle className="text-base sm:text-lg font-medium">Average Rating by Media Type</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">How you rate different types of media</CardDescription>
                 </div>
-                <Star className="h-5 w-5 text-muted-foreground" />
+                <Star className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
               </CardHeader>
               <CardContent className="pt-2">
-                <ChartContainer className="h-[200px]" config={{}}>
+                <ChartContainer className="h-[250px] sm:h-[300px]" config={{}}>
                   <BarChart
                     data={averageRatingData}
-                    margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" opacity={0.3} vertical={false} />
-                    <XAxis dataKey="category" tick={{ fontSize: 12 }} />
+                    <XAxis 
+                      dataKey="category" 
+                      tick={{ fontSize: 10 }}
+                      angle={-45}
+                      textAnchor="end"
+                      height={60}
+                    />
                     <YAxis
                       domain={[0, 5]}
                       ticks={[0, 1, 2, 3, 4, 5]}
                       width={30}
+                      tick={{ fontSize: 10 }}
                     />
                     <ChartTooltip
                       formatter={(value) => [`${value} / 5`, "Avg Rating"]}
@@ -549,7 +563,7 @@ const Index: React.FC = () => {
                       dataKey="rating"
                       name="Avg Rating"
                       fill="#8b5cf6"
-                      barSize={60}
+                      barSize={50}
                       radius={[4, 4, 0, 0]}
                     >
                       {averageRatingData.map((entry, index) => (
