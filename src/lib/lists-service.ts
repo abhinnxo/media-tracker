@@ -18,6 +18,12 @@ export interface ListItem {
   media_id: string;
   position: number;
   added_at: string;
+  notes?: string;
+  added_by_user_id: string;
+}
+
+export interface ListItemWithMedia extends ListItem {
+  media_item?: any;
 }
 
 export interface FilterPreset {
@@ -43,6 +49,21 @@ export const listsService = {
     }
 
     return data || [];
+  },
+
+  async getListById(listId: string): Promise<CustomList | null> {
+    const { data, error } = await supabase
+      .from('custom_lists')
+      .select('*')
+      .eq('id', listId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching list:', error);
+      return null;
+    }
+
+    return data;
   },
 
   async createList(userId: string, listData: Partial<CustomList>): Promise<CustomList | null> {
@@ -99,11 +120,14 @@ export const listsService = {
     return true;
   },
 
-  // List Items
-  async getListItems(listId: string): Promise<ListItem[]> {
+  // List Items with metadata
+  async getListItems(listId: string): Promise<ListItemWithMedia[]> {
     const { data, error } = await supabase
       .from('list_items')
-      .select('*')
+      .select(`
+        *,
+        media_item:media_items(*)
+      `)
       .eq('list_id', listId)
       .order('position');
 
@@ -115,7 +139,13 @@ export const listsService = {
     return data || [];
   },
 
-  async addItemToList(listId: string, mediaId: string, position?: number): Promise<ListItem | null> {
+  async addItemToList(
+    listId: string, 
+    mediaId: string, 
+    userId: string,
+    notes?: string,
+    position?: number
+  ): Promise<ListItem | null> {
     // Get the current max position if position not specified
     if (position === undefined) {
       const { data: existingItems } = await supabase
@@ -133,7 +163,9 @@ export const listsService = {
       .insert({
         list_id: listId,
         media_id: mediaId,
-        position: position
+        position: position,
+        added_by_user_id: userId,
+        notes: notes || null
       })
       .select()
       .single();
@@ -146,12 +178,30 @@ export const listsService = {
     return data;
   },
 
-  async removeItemFromList(listId: string, mediaId: string): Promise<boolean> {
+  async updateListItem(
+    itemId: string,
+    updates: Partial<{ position: number; notes: string }>
+  ): Promise<ListItem | null> {
+    const { data, error } = await supabase
+      .from('list_items')
+      .update(updates)
+      .eq('id', itemId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating list item:', error);
+      return null;
+    }
+
+    return data;
+  },
+
+  async removeItemFromList(itemId: string): Promise<boolean> {
     const { error } = await supabase
       .from('list_items')
       .delete()
-      .eq('list_id', listId)
-      .eq('media_id', mediaId);
+      .eq('id', itemId);
 
     if (error) {
       console.error('Error removing item from list:', error);

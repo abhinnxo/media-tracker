@@ -9,6 +9,7 @@ import { AnimatedTransition } from '@/components/AnimatedTransition';
 import { listsService, CustomList } from '@/lib/lists-service';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,6 +53,9 @@ const Lists: React.FC = () => {
     const success = await listsService.deleteList(listId);
     if (success) {
       setLists(lists.filter(list => list.id !== listId));
+      toast.success('List deleted successfully');
+    } else {
+      toast.error('Failed to delete list');
     }
   };
 

@@ -28,6 +28,7 @@ import ResetPassword from "./pages/Auth/ResetPassword";
 import UpdatePassword from "./pages/Auth/UpdatePassword";
 import Lists from "./pages/Lists";
 import CreateList from "./pages/CreateList";
+import ListDetails from "./pages/ListDetails";
 
 const queryClient = new QueryClient();
 
@@ -167,6 +168,14 @@ const App = () => (
                   element={
                     <ProtectedRoute>
                       <CreateList />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/lists/:id"
+                  element={
+                    <ProtectedRoute>
+                      <ListDetails />
                     </ProtectedRoute>
                   }
                 />

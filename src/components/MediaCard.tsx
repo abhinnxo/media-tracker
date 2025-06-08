@@ -1,11 +1,11 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MediaItem, MediaCategory } from '@/lib/types';
 import { StatusBadge } from './StatusBadge';
-import { Book, Film, Tv, Star } from 'lucide-react';
+import { Book, Film, Tv, Star, ImageOff } from 'lucide-react';
 import { AnimatedTransition } from './AnimatedTransition';
 import { cn } from '@/lib/utils';
-import { Button } from './ui/button';
 
 interface MediaCardProps {
   item: MediaItem;
@@ -18,6 +18,8 @@ export const MediaCard: React.FC<MediaCardProps> = ({
   delay = 0,
   variant = 'grid' 
 }) => {
+  const [imageError, setImageError] = useState(false);
+
   // Category icon mapping
   const CategoryIcon = {
     [MediaCategory.MOVIE]: Film,
@@ -36,6 +38,31 @@ export const MediaCard: React.FC<MediaCardProps> = ({
     [MediaCategory.MANGA]: 'Manga',
   };
 
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
+  const ImageComponent = ({ className, size }: { className: string; size: number }) => {
+    if (!item.image_url || imageError) {
+      return (
+        <div className={cn("flex items-center justify-center bg-secondary", className)}>
+          <CategoryIcon size={size} className="text-muted-foreground/40" />
+        </div>
+      );
+    }
+
+    return (
+      <img
+        src={item.image_url}
+        alt={item.title}
+        className={className}
+        loading="lazy"
+        onError={handleImageError}
+        crossOrigin="anonymous"
+      />
+    );
+  };
+
   if (variant === 'list') {
     return (
       <AnimatedTransition
@@ -50,18 +77,10 @@ export const MediaCard: React.FC<MediaCardProps> = ({
           <div className="bg-card rounded-xl overflow-hidden border border-border hover:border-primary/30 hover:shadow-md transition-all-200">
             <div className="flex p-4 gap-4">
               <div className="w-[100px] aspect-[2/3] relative overflow-hidden bg-muted rounded-md flex-shrink-0">
-                {item.image_url ? (
-                  <img
-                    src={item.image_url}
-                    alt={item.title}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-secondary">
-                    <CategoryIcon size={32} className="text-muted-foreground/40" />
-                  </div>
-                )}
+                <ImageComponent 
+                  className="w-full h-full object-cover"
+                  size={32}
+                />
               </div>
 
               <div className="flex-1 min-w-0">
@@ -126,18 +145,10 @@ export const MediaCard: React.FC<MediaCardProps> = ({
       >
         <div className="bg-card rounded-xl overflow-hidden h-full border border-border hover:border-primary/30 hover:shadow-md transition-all-200">
           <div className="aspect-[2/3] relative overflow-hidden bg-muted">
-            {item.image_url ? (
-              <img
-                src={item.image_url}
-                alt={item.title}
-                className="w-full h-full object-cover transition-transform-300 group-hover:scale-105"
-                loading="lazy"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-secondary">
-                <CategoryIcon size={48} className="text-muted-foreground/40" />
-              </div>
-            )}
+            <ImageComponent 
+              className="w-full h-full object-cover transition-transform-300 group-hover:scale-105"
+              size={48}
+            />
 
             <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity p-4 overflow-y-auto">
               <div className="text-white space-y-2">
