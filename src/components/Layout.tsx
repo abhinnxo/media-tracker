@@ -1,165 +1,144 @@
 
+import React, { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 import {
-  SidebarProvider,
-  Sidebar,
-  SidebarContent,
-  SidebarHeader,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarInset,
-  SidebarRail,
-  SidebarTrigger,
-} from "@/components/ui/sidebar"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Link } from "react-router-dom"
-import { useAuth } from "@/contexts/AuthContext"
-import { useState, useEffect } from "react"
-import { Home, Library, Compass, User, LogOut, Sun, Moon, Menu, X, PanelLeft } from "lucide-react"
-import { useTheme } from "next-themes"
-import { cn } from "@/lib/utils"
+  Home,
+  Library,
+  Plus,
+  Search,
+  User,
+  Menu,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  List
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
-interface Props {
-  children: React.ReactNode
+interface LayoutProps {
+  children: React.ReactNode;
 }
 
-export const Layout: React.FC<Props> = ({ children }) => {
-  const { user, signOut } = useAuth()
-  const [isMounted, setIsMounted] = useState(false)
-  const { theme, setTheme } = useTheme();
-  
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
+const navigation = [
+  { name: 'Dashboard', href: '/', icon: Home },
+  { name: 'Library', href: '/library', icon: Library },
+  { name: 'My Lists', href: '/lists', icon: List },
+  { name: 'Add Media', href: '/add', icon: Plus },
+  { name: 'Explore', href: '/explore', icon: Search },
+  { name: 'Profile', href: '/profile', icon: User },
+];
 
-  if (!isMounted) {
-    return null
-  }
+export const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const location = useLocation();
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  const menuItems = [
-    { icon: Home, label: "Home", href: "/home" },
-    { icon: Compass, label: "Explore", href: "/explore" },
-    { icon: Library, label: "Library", href: "/library" },
-  ];
+  const SidebarContent = ({ mobile = false }: { mobile?: boolean }) => (
+    <div className="flex h-full flex-col">
+      {/* Logo */}
+      <div className="flex h-16 items-center border-b px-6">
+        <Link 
+          to="/" 
+          className="flex items-center gap-2 font-semibold"
+          onClick={() => mobile && setIsMobileOpen(false)}
+        >
+          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+            <span className="text-primary-foreground font-bold text-sm">M</span>
+          </div>
+          {(!isCollapsed || mobile) && <span>MediaTracker</span>}
+        </Link>
+      </div>
 
-  const handleThemeToggle = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
-  };
+      {/* Navigation */}
+      <nav className="flex-1 space-y-2 p-4">
+        {navigation.map((item) => {
+          const isActive = location.pathname === item.href;
+          return (
+            <Link
+              key={item.name}
+              to={item.href}
+              onClick={() => mobile && setIsMobileOpen(false)}
+              className={cn(
+                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                isActive
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+              )}
+            >
+              <item.icon className="h-4 w-4 shrink-0" />
+              {(!isCollapsed || mobile) && <span>{item.name}</span>}
+            </Link>
+          );
+        })}
+      </nav>
+    </div>
+  );
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <div className="flex min-h-screen w-full">
-        <Sidebar collapsible="icon" className="border-r">
-          <SidebarHeader className="flex flex-col items-center justify-center py-6">
-            <Link to="/home" className="text-xl font-bold group-data-[collapsible=icon]:hidden">
-              MyMediaList
-            </Link>
-            <Link to="/home" className="text-xl font-bold hidden group-data-[collapsible=icon]:block">
-              M
-            </Link>
-          </SidebarHeader>
+    <div className="min-h-screen bg-background">
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:block">
+        <div 
+          className={cn(
+            "fixed inset-y-0 left-0 z-50 bg-card border-r transition-all duration-300",
+            isCollapsed ? "w-16" : "w-64"
+          )}
+        >
+          <SidebarContent />
           
-          <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {menuItems.map((item) => (
-                    <SidebarMenuItem key={item.label}>
-                      <SidebarMenuButton asChild>
-                        <Link to={item.href}>
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.label}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-            
-            {user && (
-              <SidebarGroup>
-                <SidebarGroupLabel>Account</SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton asChild>
-                        <Link to="/profile">
-                          <User className="h-4 w-4" />
-                          <span>Profile</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton onClick={signOut}>
-                        <LogOut className="h-4 w-4" />
-                        <span>Logout</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-            )}
-          </SidebarContent>
-          
-          <SidebarFooter className="p-4">
-            {user ? (
-              <div className="flex items-center gap-2 p-2 group-data-[collapsible=icon]:justify-center">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="" alt={user?.email || "Avatar"} />
-                  <AvatarFallback>{user?.email?.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-                  <span className="text-sm font-medium">{user.email}</span>
-                </div>
-              </div>
+          {/* Collapse Toggle */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute -right-3 top-20 h-6 w-6 rounded-full border bg-background p-0 shadow-md"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+          >
+            {isCollapsed ? (
+              <ChevronRight className="h-3 w-3" />
             ) : (
-              <Link to="/login" className="group-data-[collapsible=icon]:hidden">
-                <Button className="w-full">Login</Button>
-              </Link>
+              <ChevronLeft className="h-3 w-3" />
             )}
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={handleThemeToggle} 
-              className="mt-2"
-            >
-              {theme === "dark" ? (
-                <Sun className="h-4 w-4" />
-              ) : (
-                <Moon className="h-4 w-4" />
-              )}
-            </Button>
-          </SidebarFooter>
-        </Sidebar>
-        
-        <SidebarInset className="w-full">
-          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-            <SidebarTrigger className="-ml-1" />
-            <div className="ml-auto" />
-          </header>
-          
-          <main className="flex-1 p-4 lg:p-6">
-            <div className="mx-auto w-full max-w-7xl">
-              {children}
-            </div>
-          </main>
-          
-          <footer className="w-full border-t bg-background">
-            <div className="container flex flex-col items-center justify-center space-y-4 py-6 md:flex-row md:justify-between md:space-y-0">
-              <span className="text-sm text-muted-foreground">
-                © 2023 MyMediaList. All rights reserved.
-              </span>
-            </div>
-          </footer>
-        </SidebarInset>
+          </Button>
+        </div>
       </div>
-    </SidebarProvider>
+
+      {/* Mobile Navigation */}
+      <div className="lg:hidden">
+        <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b bg-background px-4 shadow-sm sm:gap-x-6 sm:px-6">
+          <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-64 p-0">
+              <SidebarContent mobile />
+            </SheetContent>
+          </Sheet>
+          
+          <Link to="/" className="flex items-center gap-2 font-semibold">
+            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+              <span className="text-primary-foreground font-bold text-sm">M</span>
+            </div>
+            <span>MediaTracker</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div 
+        className={cn(
+          "transition-all duration-300",
+          "lg:pl-64", // Default desktop padding
+          isCollapsed && "lg:pl-16" // Collapsed desktop padding
+        )}
+      >
+        <main className="p-4 sm:p-6 lg:p-8">
+          {children}
+        </main>
+      </div>
+    </div>
   );
 };

@@ -9,6 +9,63 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      custom_lists: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          privacy_setting: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          privacy_setting?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          privacy_setting?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      filter_presets: {
+        Row: {
+          created_at: string
+          filters: Json
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          filters: Json
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          filters?: Json
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       friendships: {
         Row: {
           created_at: string | null
@@ -35,6 +92,45 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      list_items: {
+        Row: {
+          added_at: string
+          id: string
+          list_id: string
+          media_id: string
+          position: number
+        }
+        Insert: {
+          added_at?: string
+          id?: string
+          list_id: string
+          media_id: string
+          position?: number
+        }
+        Update: {
+          added_at?: string
+          id?: string
+          list_id?: string
+          media_id?: string
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "list_items_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "custom_lists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "list_items_media_id_fkey"
+            columns: ["media_id"]
+            isOneToOne: false
+            referencedRelation: "media_items"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       media_items: {
         Row: {
