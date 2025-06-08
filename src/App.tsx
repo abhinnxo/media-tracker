@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -26,6 +27,7 @@ import Register from "./pages/Auth/Register";
 import ResetPassword from "./pages/Auth/ResetPassword";
 import UpdatePassword from "./pages/Auth/UpdatePassword";
 import Lists from "./pages/Lists";
+import CreateList from "./pages/CreateList";
 
 const queryClient = new QueryClient();
 
@@ -157,6 +159,14 @@ const App = () => (
                   element={
                     <ProtectedRoute>
                       <Lists />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/lists/create"
+                  element={
+                    <ProtectedRoute>
+                      <CreateList />
                     </ProtectedRoute>
                   }
                 />
