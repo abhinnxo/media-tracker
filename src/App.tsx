@@ -25,6 +25,7 @@ import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
 import ResetPassword from "./pages/Auth/ResetPassword";
 import UpdatePassword from "./pages/Auth/UpdatePassword";
+import Lists from "./pages/Lists";
 
 const queryClient = new QueryClient();
 
@@ -39,83 +40,136 @@ const App = () => (
             <AnimatePresence mode="wait">
               <Routes>
                 {/* All routes are now protected, but public routes are accessible */}
-                <Route path="/" element={
-                  <ProtectedRoute>
-                    <LandingPage />
-                  </ProtectedRoute>
-                } />
-                <Route path="/home" element={
-                  <ProtectedRoute>
-                    <Index />
-                  </ProtectedRoute>
-                } />
-                <Route path="/login" element={
-                  <ProtectedRoute>
-                    <Login />
-                  </ProtectedRoute>
-                } />
-                <Route path="/register" element={
-                  <ProtectedRoute>
-                    <Register />
-                  </ProtectedRoute>
-                } />
-                <Route path="/reset-password" element={
-                  <ProtectedRoute>
-                    <ResetPassword />
-                  </ProtectedRoute>
-                } />
-                <Route path="/update-password" element={
-                  <ProtectedRoute>
-                    <UpdatePassword />
-                  </ProtectedRoute>
-                } />
-                <Route path="/user/:username" element={
-                  <ProtectedRoute>
-                    <UserProfile />
-                  </ProtectedRoute>
-                } />
-                <Route path="/explore" element={
-                  <ProtectedRoute>
-                    <Explore />
-                  </ProtectedRoute>
-                } />
-                <Route path="/library" element={
-                  <ProtectedRoute>
-                    <Library />
-                  </ProtectedRoute>
-                } />
-                <Route path="/add" element={
-                  <ProtectedRoute>
-                    <AddEdit />
-                  </ProtectedRoute>
-                } />
-                <Route path="/edit/:id" element={
-                  <ProtectedRoute>
-                    <AddEdit />
-                  </ProtectedRoute>
-                } />
-                <Route path="/details/:id" element={
-                  <ProtectedRoute>
-                    <Details />
-                  </ProtectedRoute>
-                } />
-                <Route path="/profile" element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
-                } />
-                <Route path="/onboarding" element={
-                  <ProtectedRoute>
-                    <Onboarding />
-                  </ProtectedRoute>
-                } />
-                
+                <Route
+                  path="/"
+                  element={
+                    <ProtectedRoute>
+                      <LandingPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/home"
+                  element={
+                    <ProtectedRoute>
+                      <Index />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/login"
+                  element={
+                    <ProtectedRoute>
+                      <Login />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/register"
+                  element={
+                    <ProtectedRoute>
+                      <Register />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/reset-password"
+                  element={
+                    <ProtectedRoute>
+                      <ResetPassword />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/update-password"
+                  element={
+                    <ProtectedRoute>
+                      <UpdatePassword />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/user/:username"
+                  element={
+                    <ProtectedRoute>
+                      <UserProfile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/explore"
+                  element={
+                    <ProtectedRoute>
+                      <Explore />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/library"
+                  element={
+                    <ProtectedRoute>
+                      <Library />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/add"
+                  element={
+                    <ProtectedRoute>
+                      <AddEdit />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/edit/:id"
+                  element={
+                    <ProtectedRoute>
+                      <AddEdit />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/details/:id"
+                  element={
+                    <ProtectedRoute>
+                      <Details />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/onboarding"
+                  element={
+                    <ProtectedRoute>
+                      <Onboarding />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/lists"
+                  element={
+                    <ProtectedRoute>
+                      <Lists />
+                    </ProtectedRoute>
+                  }
+                />
+
                 {/* Catch-all route */}
-                <Route path="*" element={
-                  <ProtectedRoute>
-                    <NotFound />
-                  </ProtectedRoute>
-                } />
+                <Route
+                  path="*"
+                  element={
+                    <ProtectedRoute>
+                      <NotFound />
+                    </ProtectedRoute>
+                  }
+                />
               </Routes>
             </AnimatePresence>
           </BrowserRouter>
