@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
@@ -21,6 +20,7 @@ import { supabaseStore } from '@/lib/supabase-store';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { MediaItem } from '@/lib/types';
+import { ListSortFilter, FilterOption } from '@/components/ListSortFilter';
 import {
   Dialog,
   DialogContent,
@@ -41,10 +41,16 @@ const ListDetails: React.FC = () => {
   const { user } = useAuth();
   const [list, setList] = useState<CustomList | null>(null);
   const [listItems, setListItems] = useState<ListItemWithMedia[]>([]);
+  const [filteredAndSortedItems, setFilteredAndSortedItems] = useState<ListItemWithMedia[]>([]);
   const [availableMedia, setAvailableMedia] = useState<MediaItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [sortBy, setSortBy] = useState('position');
+  const [filter, setFilter] = useState<FilterOption>({
+    dateRange: 'all',
+    showMetadata: true
+  });
 
   useEffect(() => {
     if (id && user) {
@@ -52,6 +58,54 @@ const ListDetails: React.FC = () => {
       fetchAvailableMedia();
     }
   }, [id, user]);
+
+  useEffect(() => {
+    let filtered = [...listItems];
+
+    // Apply date range filter
+    if (filter.dateRange !== 'all') {
+      const now = new Date();
+      let filterDate = new Date();
+      
+      switch (filter.dateRange) {
+        case '7days':
+          filterDate.setDate(now.getDate() - 7);
+          break;
+        case '30days':
+          filterDate.setDate(now.getDate() - 30);
+          break;
+        case '90days':
+          filterDate.setDate(now.getDate() - 90);
+          break;
+      }
+      
+      filtered = filtered.filter(item => new Date(item.added_at) >= filterDate);
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'position':
+          return a.position - b.position;
+        case 'date-newest':
+          return new Date(b.added_at).getTime() - new Date(a.added_at).getTime();
+        case 'date-oldest':
+          return new Date(a.added_at).getTime() - new Date(b.added_at).getTime();
+        case 'title-asc':
+          return (a.media_item?.title || '').localeCompare(b.media_item?.title || '');
+        case 'title-desc':
+          return (b.media_item?.title || '').localeCompare(a.media_item?.title || '');
+        case 'rating-high':
+          return (b.media_item?.rating || 0) - (a.media_item?.rating || 0);
+        case 'rating-low':
+          return (a.media_item?.rating || 0) - (b.media_item?.rating || 0);
+        default:
+          return 0;
+      }
+    });
+
+    setFilteredAndSortedItems(filtered);
+  }, [listItems, sortBy, filter]);
 
   const fetchListDetails = async () => {
     if (!id || !user) return;
@@ -260,72 +314,84 @@ const ListDetails: React.FC = () => {
           </AnimatedTransition>
         ) : (
           <AnimatedTransition variant="fadeIn" delay={0.1}>
-            <div className="grid gap-4">
-              {listItems.map((item, index) => (
-                <Card key={item.id} className="overflow-hidden">
-                  <CardContent className="p-4">
-                    <div className="flex gap-4">
-                      <div className="w-20 h-28 bg-muted rounded overflow-hidden flex-shrink-0">
-                        {item.media_item?.image_url ? (
-                          <img
-                            src={item.media_item.image_url}
-                            alt={item.media_item.title}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                            }}
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-secondary" />
-                        )}
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h4 className="font-medium text-lg">{item.media_item?.title}</h4>
-                            <p className="text-sm text-muted-foreground capitalize">
-                              {item.media_item?.category}
-                            </p>
-                            {item.media_item?.description && (
-                              <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                                {item.media_item.description}
-                              </p>
-                            )}
-                          </div>
-                          
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem 
-                                className="text-destructive"
-                                onClick={() => handleRemoveItem(item.id)}
-                              >
-                                Remove from List
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+            <div className="space-y-4">
+              <ListSortFilter
+                sortBy={sortBy}
+                onSortChange={setSortBy}
+                filter={filter}
+                onFilterChange={setFilter}
+                itemCount={filteredAndSortedItems.length}
+              />
+              
+              <div className="grid gap-4">
+                {filteredAndSortedItems.map((item, index) => (
+                  <Card key={item.id} className="overflow-hidden">
+                    <CardContent className="p-4">
+                      <div className="flex gap-4">
+                        <div className="w-20 h-28 bg-muted rounded overflow-hidden flex-shrink-0">
+                          {item.media_item?.image_url ? (
+                            <img
+                              src={item.media_item.image_url}
+                              alt={item.media_item.title}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-secondary" />
+                          )}
                         </div>
                         
-                        <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            <span>Added {new Date(item.added_at).toLocaleDateString()}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h4 className="font-medium text-lg">{item.media_item?.title}</h4>
+                              <p className="text-sm text-muted-foreground capitalize">
+                                {item.media_item?.category}
+                              </p>
+                              {item.media_item?.description && (
+                                <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                                  {item.media_item.description}
+                                </p>
+                              )}
+                            </div>
+                            
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem 
+                                  className="text-destructive"
+                                  onClick={() => handleRemoveItem(item.id)}
+                                >
+                                  Remove from List
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <span>Position {item.position + 1}</span>
-                          </div>
+                          
+                          {filter.showMetadata && (
+                            <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                <span>Added {new Date(item.added_at).toLocaleDateString()}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <span>Position {item.position + 1}</span>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
           </AnimatedTransition>
         )}
