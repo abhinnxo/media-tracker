@@ -66,33 +66,6 @@ export type Database = {
         }
         Relationships: []
       }
-      friendships: {
-        Row: {
-          created_at: string | null
-          friend_id: string
-          id: string
-          status: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          friend_id: string
-          id?: string
-          status: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          friend_id?: string
-          id?: string
-          status?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
       list_items: {
         Row: {
           added_at: string
@@ -192,54 +165,116 @@ export type Database = {
         }
         Relationships: []
       }
-      messages: {
+      profile_privacy: {
         Row: {
-          content: string
-          created_at: string | null
-          id: string
-          is_read: boolean | null
-          recipient_id: string
-          reply_to: string | null
-          sender_id: string
-          updated_at: string | null
+          allow_discovery: boolean | null
+          id: number
+          show_activity: boolean | null
+          show_lists: boolean | null
+          show_showcase: boolean | null
+          show_social_links: boolean | null
+          show_stats: boolean | null
+          user_id: string
         }
         Insert: {
-          content: string
-          created_at?: string | null
-          id?: string
-          is_read?: boolean | null
-          recipient_id: string
-          reply_to?: string | null
-          sender_id: string
-          updated_at?: string | null
+          allow_discovery?: boolean | null
+          id?: number
+          show_activity?: boolean | null
+          show_lists?: boolean | null
+          show_showcase?: boolean | null
+          show_social_links?: boolean | null
+          show_stats?: boolean | null
+          user_id: string
         }
         Update: {
-          content?: string
-          created_at?: string | null
-          id?: string
-          is_read?: boolean | null
-          recipient_id?: string
-          reply_to?: string | null
-          sender_id?: string
-          updated_at?: string | null
+          allow_discovery?: boolean | null
+          id?: number
+          show_activity?: boolean | null
+          show_lists?: boolean | null
+          show_showcase?: boolean | null
+          show_social_links?: boolean | null
+          show_stats?: boolean | null
+          user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "messages_reply_to_fkey"
-            columns: ["reply_to"]
-            isOneToOne: false
-            referencedRelation: "messages"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
+      }
+      profile_showcase: {
+        Row: {
+          created_at: string
+          id: number
+          image_url: string | null
+          item_id: string
+          item_type: string
+          sort_order: number | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          image_url?: string | null
+          item_id: string
+          item_type: string
+          sort_order?: number | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          image_url?: string | null
+          item_id?: string
+          item_type?: string
+          sort_order?: number | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profile_social_links: {
+        Row: {
+          created_at: string
+          id: number
+          is_visible: boolean | null
+          platform: string
+          sort_order: number | null
+          url: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          is_visible?: boolean | null
+          platform: string
+          sort_order?: number | null
+          url: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          is_visible?: boolean | null
+          platform?: string
+          sort_order?: number | null
+          url?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
           about: string | null
           avatar_url: string | null
+          banner_url: string | null
           created_at: string
+          custom_theme_settings: Json | null
           full_name: string | null
           id: number
+          is_public: boolean | null
+          location: string | null
           pronouns: string | null
           theme: string | null
           updated_at: string | null
@@ -250,9 +285,13 @@ export type Database = {
         Insert: {
           about?: string | null
           avatar_url?: string | null
+          banner_url?: string | null
           created_at?: string
+          custom_theme_settings?: Json | null
           full_name?: string | null
           id?: number
+          is_public?: boolean | null
+          location?: string | null
           pronouns?: string | null
           theme?: string | null
           updated_at?: string | null
@@ -263,62 +302,19 @@ export type Database = {
         Update: {
           about?: string | null
           avatar_url?: string | null
+          banner_url?: string | null
           created_at?: string
+          custom_theme_settings?: Json | null
           full_name?: string | null
           id?: number
+          is_public?: boolean | null
+          location?: string | null
           pronouns?: string | null
           theme?: string | null
           updated_at?: string | null
           user_id?: string
           username?: string | null
           website?: string | null
-        }
-        Relationships: []
-      }
-      showcase_items: {
-        Row: {
-          created_at: string | null
-          id: string
-          media_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          media_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          media_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "showcase_items_media_id_fkey"
-            columns: ["media_id"]
-            isOneToOne: false
-            referencedRelation: "media_items"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_presence: {
-        Row: {
-          last_active: string | null
-          online_status: boolean | null
-          user_id: string
-        }
-        Insert: {
-          last_active?: string | null
-          online_status?: boolean | null
-          user_id: string
-        }
-        Update: {
-          last_active?: string | null
-          online_status?: boolean | null
-          user_id?: string
         }
         Relationships: []
       }

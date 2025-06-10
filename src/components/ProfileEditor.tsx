@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProfileStore } from '@/lib/profile';
@@ -8,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { User, Upload, LinkIcon } from 'lucide-react';
+import { User, Upload, LinkIcon, Image as ImageIcon } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { profileService } from '@/lib/profile-service';
@@ -25,11 +24,13 @@ export const ProfileEditor = () => {
   const [about, setAbout] = React.useState(profile.about || '');
   const [pronouns, setPronouns] = React.useState(profile.pronouns || 'they/them');
   const [websiteUrl, setWebsiteUrl] = React.useState('');
+  const [location, setLocation] = React.useState((profile as any).location || '');
   const [loading, setLoading] = React.useState(false);
   const [usernameAvailable, setUsernameAvailable] = React.useState<boolean | null>(null);
   const [usernameChecking, setUsernameChecking] = React.useState(false);
   const [originalUsername, setOriginalUsername] = React.useState('');
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const bannerInputRef = React.useRef<HTMLInputElement>(null);
   
   // Load profile from Supabase on component mount
   useEffect(() => {
@@ -46,6 +47,7 @@ export const ProfileEditor = () => {
           setPronouns(dbProfile.pronouns || 'they/them');
           setWebsiteUrl(dbProfile.website || '');
           setOriginalUsername(dbProfile.username || '');
+          setLocation(dbProfile.location || '');
           
           // Update global state
           updateProfileState(dbProfile);
@@ -131,8 +133,47 @@ export const ProfileEditor = () => {
     }
   };
   
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    
+    setLoading(true);
+    
+    try {
+      const bannerUrl = await profileService.uploadBannerImage(file, user.id);
+      
+      if (bannerUrl) {
+        const updatedProfile = { 
+          ...profile,
+          bannerUrl 
+        };
+        
+        await profileService.updateProfile(updatedProfile, user.id);
+        updateProfileState(updatedProfile);
+        
+        toast({
+          title: "Banner updated",
+          description: "Your banner image has been updated successfully"
+        });
+      }
+    } catch (error) {
+      console.error('Error uploading banner:', error);
+      toast({
+        title: "Upload failed",
+        description: "There was a problem uploading your banner",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   const triggerFileUpload = () => {
     fileInputRef.current?.click();
+  };
+  
+  const triggerBannerUpload = () => {
+    bannerInputRef.current?.click();
   };
   
   const handleSave = async () => {
@@ -167,7 +208,8 @@ export const ProfileEditor = () => {
         username,
         about,
         pronouns,
-        website: websiteUrl || null
+        website: websiteUrl || null,
+        location: location || null
       };
       
       // Save to Supabase
@@ -266,6 +308,37 @@ export const ProfileEditor = () => {
   
   return (
     <div className="space-y-6">
+      {/* Banner Image Section */}
+      <div className="relative">
+        <div 
+          className="w-full h-32 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-lg overflow-hidden"
+          style={{
+            backgroundImage: (profile as any).bannerUrl ? `url(${(profile as any).bannerUrl})` : undefined,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
+          }}
+        >
+          <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              onClick={triggerBannerUpload}
+              disabled={loading}
+            >
+              <ImageIcon className="mr-2 h-4 w-4" />
+              {(profile as any).bannerUrl ? 'Change Banner' : 'Add Banner'}
+            </Button>
+          </div>
+        </div>
+        <input 
+          type="file" 
+          ref={bannerInputRef} 
+          className="hidden" 
+          accept="image/*"
+          onChange={handleBannerUpload}
+        />
+      </div>
+
       <div className="flex flex-col items-center sm:flex-row sm:items-start gap-6">
         <div className="flex flex-col items-center gap-2">
           <Avatar className="h-24 w-24">
@@ -312,6 +385,7 @@ export const ProfileEditor = () => {
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Your name"
                 disabled={loading}
+                maxLength={100}
               />
             </div>
             
@@ -329,6 +403,7 @@ export const ProfileEditor = () => {
                   className={getUsernameInputClasses()}
                   required
                   minLength={3}
+                  maxLength={30}
                 />
                 {usernameChecking && username !== originalUsername && (
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -368,19 +443,36 @@ export const ProfileEditor = () => {
               placeholder="Tell us about yourself"
               rows={4}
               disabled={loading}
+              maxLength={500}
             />
+            <p className="text-xs text-muted-foreground">
+              {about.length}/500 characters
+            </p>
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="website">Website</Label>
-            <Input 
-              id="website" 
-              type="url"
-              value={websiteUrl} 
-              onChange={(e) => setWebsiteUrl(e.target.value)}
-              placeholder="https://yourwebsite.com"
-              disabled={loading}
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="website">Website</Label>
+              <Input 
+                id="website" 
+                type="url"
+                value={websiteUrl} 
+                onChange={(e) => setWebsiteUrl(e.target.value)}
+                placeholder="https://yourwebsite.com"
+                disabled={loading}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="location">Location</Label>
+              <Input 
+                id="location" 
+                value={location} 
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="City, Country"
+                disabled={loading}
+              />
+            </div>
           </div>
         </div>
       </div>

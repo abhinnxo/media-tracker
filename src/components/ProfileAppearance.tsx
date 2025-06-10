@@ -4,6 +4,8 @@ import { useProfileStore } from '@/lib/profile';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { profileService } from '@/lib/profile-service';
 
 const colorThemes = [
   {
@@ -47,42 +49,70 @@ const colorThemes = [
 export const ProfileAppearance = () => {
   const profile = useProfileStore(state => state.profile);
   const updateProfile = useProfileStore(state => state.updateProfile);
+  const { user } = useAuth();
+  const [loading, setLoading] = React.useState(false);
   
-  const applyTheme = (themeId: string) => {
+  const applyTheme = async (themeId: string) => {
+    if (!user) return;
+    
     const theme = colorThemes.find(t => t.id === themeId);
     if (!theme) return;
     
-    if (themeId === 'default') {
-      // Reset to the default theme
-      document.documentElement.removeAttribute('data-theme');
-      Object.keys(colorThemes[0].cssVars).forEach(key => {
-        document.documentElement.style.removeProperty(key);
+    setLoading(true);
+    
+    try {
+      if (themeId === 'default') {
+        // Reset to the default theme
+        document.documentElement.removeAttribute('data-theme');
+        Object.keys(colorThemes[0].cssVars).forEach(key => {
+          document.documentElement.style.removeProperty(key);
+        });
+      } else {
+        // Apply custom theme
+        document.documentElement.setAttribute('data-theme', themeId);
+        Object.entries(theme.cssVars).forEach(([key, value]) => {
+          document.documentElement.style.setProperty(key, value as string);
+        });
+      }
+      
+      const updatedProfile = {
+        ...profile,
+        theme: themeId,
+        customThemeSettings: theme.cssVars
+      };
+      
+      // Save to database
+      await profileService.updateProfile(updatedProfile, user.id);
+      updateProfile(updatedProfile);
+      
+      toast({
+        title: "Theme updated",
+        description: `Applied theme: ${theme.name}`
       });
-    } else {
-      // Apply custom theme
-      document.documentElement.setAttribute('data-theme', themeId);
-      Object.entries(theme.cssVars).forEach(([key, value]) => {
-        document.documentElement.style.setProperty(key, value as string);
+    } catch (error) {
+      console.error('Error updating theme:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update theme",
+        variant: "destructive"
       });
+    } finally {
+      setLoading(false);
     }
-    
-    updateProfile({
-      ...profile,
-      theme: themeId
-    });
-    
-    toast({
-      title: "Theme updated",
-      description: `Applied theme: ${theme.name}`
-    });
   };
   
   // Apply saved theme on component mount
   React.useEffect(() => {
-    if (profile.theme) {
-      applyTheme(profile.theme);
+    if (profile.theme && profile.theme !== 'default') {
+      const theme = colorThemes.find(t => t.id === profile.theme);
+      if (theme) {
+        document.documentElement.setAttribute('data-theme', profile.theme);
+        Object.entries(theme.cssVars).forEach(([key, value]) => {
+          document.documentElement.style.setProperty(key, value as string);
+        });
+      }
     }
-  }, []);
+  }, [profile.theme]);
   
   return (
     <div className="space-y-6">
@@ -108,13 +138,19 @@ export const ProfileAppearance = () => {
                   {theme.colors.map((color, idx) => (
                     <div 
                       key={idx}
-                      className="h-6 w-6 rounded-full"
+                      className="h-6 w-6 rounded-full border border-border"
                       style={{ backgroundColor: color }}
                     />
                   ))}
                 </div>
               ) : (
                 <div className="text-sm text-muted-foreground">Default system theme</div>
+              )}
+              
+              {profile.theme === theme.id && (
+                <div className="mt-2 text-xs text-primary font-medium">
+                  Currently active
+                </div>
               )}
             </div>
           ))}
@@ -126,6 +162,7 @@ export const ProfileAppearance = () => {
           variant="outline" 
           onClick={() => applyTheme('default')}
           className="mr-2"
+          disabled={loading}
         >
           Reset to Default
         </Button>

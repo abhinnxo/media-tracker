@@ -18,6 +18,11 @@ export interface Profile {
   showcaseIds?: string[];
   socialLinks?: ProfileSocialLink[];
   friendsCount?: number;
+  // New fields
+  bannerUrl?: string;
+  location?: string;
+  isPublic?: boolean;
+  customThemeSettings?: any;
 }
 
 interface ProfileState {

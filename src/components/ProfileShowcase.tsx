@@ -9,35 +9,44 @@ import { toast } from '@/hooks/use-toast';
 import { Plus, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { mediaStore } from '@/lib/store';
+import { useAuth } from '@/contexts/AuthContext';
+import { profileService, ShowcaseItem } from '@/lib/profile-service';
 
 const MAX_SHOWCASE_ITEMS = 5;
 
 export const ProfileShowcase = () => {
   const profile = useProfileStore(state => state.profile);
   const updateProfile = useProfileStore(state => state.updateProfile);
+  const { user } = useAuth();
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
-  const [showcaseItems, setShowcaseItems] = useState<MediaItem[]>([]);
+  const [showcaseItems, setShowcaseItems] = useState<ShowcaseItem[]>([]);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   
-  // Fetch all media items
+  // Fetch all media items and showcase
   useEffect(() => {
-    const fetchMediaItems = async () => {
-      const items = await mediaStore.getAll();
-      setMediaItems(items);
+    const fetchData = async () => {
+      if (!user) return;
       
-      // Filter items that are in the showcase
-      if (profile.showcaseIds?.length) {
-        const showcased = items.filter(item => 
-          profile.showcaseIds?.includes(item.id)
-        );
-        setShowcaseItems(showcased);
+      try {
+        const [items, showcase] = await Promise.all([
+          mediaStore.getAll(),
+          profileService.getShowcaseItems(user.id)
+        ]);
+        
+        setMediaItems(items);
+        setShowcaseItems(showcase);
+      } catch (error) {
+        console.error('Error fetching data:', error);
       }
     };
     
-    fetchMediaItems();
-  }, [profile.showcaseIds]);
+    fetchData();
+  }, [user]);
   
-  const addToShowcase = (item: MediaItem) => {
+  const addToShowcase = async (item: MediaItem) => {
+    if (!user) return;
+    
     if (showcaseItems.length >= MAX_SHOWCASE_ITEMS) {
       toast({
         title: "Showcase full",
@@ -47,33 +56,74 @@ export const ProfileShowcase = () => {
       return;
     }
     
-    // Add the item to the showcase
-    const updatedShowcaseIds = [...(profile.showcaseIds || []), item.id];
-    updateProfile({
-      ...profile,
-      showcaseIds: updatedShowcaseIds
-    });
+    setLoading(true);
     
-    toast({
-      title: "Item added",
-      description: `"${item.title}" added to your showcase`
-    });
+    try {
+      const newShowcaseItem = await profileService.addToShowcase(
+        user.id,
+        item.category,
+        item.id,
+        item.title,
+        item.image_url
+      );
+      
+      if (newShowcaseItem) {
+        setShowcaseItems([...showcaseItems, newShowcaseItem]);
+        
+        toast({
+          title: "Item added",
+          description: `"${item.title}" added to your showcase`
+        });
+      }
+    } catch (error) {
+      console.error('Error adding to showcase:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add item to showcase",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
   
-  const removeFromShowcase = (itemId: string) => {
-    const updatedShowcaseIds = (profile.showcaseIds || [])
-      .filter(id => id !== itemId);
+  const removeFromShowcase = async (showcaseItem: ShowcaseItem) => {
+    if (!user) return;
     
-    updateProfile({
-      ...profile,
-      showcaseIds: updatedShowcaseIds
-    });
+    setLoading(true);
     
-    toast({
-      title: "Item removed",
-      description: "Item removed from your showcase"
-    });
+    try {
+      const success = await profileService.removeFromShowcase(showcaseItem.id);
+      
+      if (success) {
+        setShowcaseItems(showcaseItems.filter(item => item.id !== showcaseItem.id));
+        
+        toast({
+          title: "Item removed",
+          description: "Item removed from your showcase"
+        });
+      }
+    } catch (error) {
+      console.error('Error removing from showcase:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove item from showcase",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
+  
+  // Get media items that are in showcase
+  const showcasedMediaItems = mediaItems.filter(item => 
+    showcaseItems.some(showcase => showcase.item_id === item.id)
+  );
+  
+  // Get available items not in showcase
+  const availableItems = mediaItems.filter(item => 
+    !showcaseItems.some(showcase => showcase.item_id === item.id)
+  );
   
   return (
     <div className="space-y-6">
@@ -96,27 +146,31 @@ export const ProfileShowcase = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {showcaseItems.map(item => (
-              <div key={item.id} className="relative group">
-                <div onClick={() => navigate(`/details/${item.id}`)}>
-                  <MediaCard 
-                    item={item}
-                    delay={0}
-                  />
+            {showcasedMediaItems.map(item => {
+              const showcaseItem = showcaseItems.find(s => s.item_id === item.id);
+              return (
+                <div key={item.id} className="relative group">
+                  <div onClick={() => navigate(`/details/${item.id}`)}>
+                    <MediaCard 
+                      item={item}
+                      delay={0}
+                    />
+                  </div>
+                  <Button
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                    size="icon"
+                    variant="destructive"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (showcaseItem) removeFromShowcase(showcaseItem);
+                    }}
+                    disabled={loading}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 </div>
-                <Button
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                  size="icon"
-                  variant="destructive"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeFromShowcase(item.id);
-                  }}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -134,10 +188,9 @@ export const ProfileShowcase = () => {
             </Button>
           </div>
           
-          {mediaItems.filter(item => !profile.showcaseIds?.includes(item.id)).length > 0 ? (
+          {availableItems.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {mediaItems
-                .filter(item => !profile.showcaseIds?.includes(item.id))
+              {availableItems
                 .slice(0, 6)
                 .map(item => (
                   <div key={item.id} className="relative group">
@@ -151,6 +204,7 @@ export const ProfileShowcase = () => {
                       className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
                       size="sm"
                       onClick={() => addToShowcase(item)}
+                      disabled={loading}
                     >
                       <Plus className="h-4 w-4 mr-1" />
                       Add
