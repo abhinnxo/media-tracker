@@ -1,14 +1,21 @@
 
 import { supabase } from './supabase';
+import { env } from './env';
 
 export const storageService = {
   async uploadImage(file: File, userId: string): Promise<string | null> {
     try {
+      // Validate file size
+      if (file.size > env.storage.maxFileSize) {
+        console.error('File size exceeds maximum allowed size');
+        return null;
+      }
+
       const fileExt = file.name.split('.').pop();
       const fileName = `${userId}/${Date.now()}.${fileExt}`;
       
       const { data, error } = await supabase.storage
-        .from('media-images')
+        .from(env.storage.bucketName)
         .upload(fileName, file);
 
       if (error) {
@@ -17,7 +24,7 @@ export const storageService = {
       }
 
       const { data: urlData } = supabase.storage
-        .from('media-images')
+        .from(env.storage.bucketName)
         .getPublicUrl(fileName);
 
       return urlData.publicUrl;
@@ -33,7 +40,7 @@ export const storageService = {
       if (!fileName) return false;
 
       const { error } = await supabase.storage
-        .from('media-images')
+        .from(env.storage.bucketName)
         .remove([fileName]);
 
       return !error;

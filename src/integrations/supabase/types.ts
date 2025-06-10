@@ -96,24 +96,33 @@ export type Database = {
       list_items: {
         Row: {
           added_at: string
+          added_by_user_id: string | null
           id: string
           list_id: string
           media_id: string
+          notes: string | null
           position: number
+          updated_at: string | null
         }
         Insert: {
           added_at?: string
+          added_by_user_id?: string | null
           id?: string
           list_id: string
           media_id: string
+          notes?: string | null
           position?: number
+          updated_at?: string | null
         }
         Update: {
           added_at?: string
+          added_by_user_id?: string | null
           id?: string
           list_id?: string
           media_id?: string
+          notes?: string | null
           position?: number
+          updated_at?: string | null
         }
         Relationships: [
           {

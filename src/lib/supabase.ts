@@ -1,10 +1,11 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database.types';
+import { env } from './env';
 
-// Environment variables provided by Vite
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Use environment variables with fallback to existing values for backward compatibility
+const supabaseUrl = env.supabase.url;
+const supabaseAnonKey = env.supabase.anonKey;
 
 // If environment variables aren't set, provide instructions
 if (!supabaseUrl || !supabaseAnonKey) {

@@ -2,24 +2,19 @@
 import React, { useState, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Grid, List, MoreVertical } from 'lucide-react';
+import { Plus, Search, Grid, List } from 'lucide-react';
 import { AnimatedTransition } from '@/components/AnimatedTransition';
 import { listsService, CustomList } from '@/lib/lists-service';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { EnhancedListCard } from '@/components/EnhancedListCard';
 
 const Lists: React.FC = () => {
   const { user } = useAuth();
   const [lists, setLists] = useState<CustomList[]>([]);
+  const [listStats, setListStats] = useState<Record<string, { itemCount: number; averageRating: number }>>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isLoading, setIsLoading] = useState(true);
@@ -37,6 +32,25 @@ const Lists: React.FC = () => {
     try {
       const userLists = await listsService.getLists(user.id);
       setLists(userLists);
+      
+      // Fetch stats for each list
+      const stats: Record<string, { itemCount: number; averageRating: number }> = {};
+      
+      for (const list of userLists) {
+        const items = await listsService.getListItems(list.id);
+        const itemCount = items.length;
+        const ratingsWithValues = items
+          .map(item => item.media_item?.rating)
+          .filter((rating): rating is number => typeof rating === 'number' && rating > 0);
+        
+        const averageRating = ratingsWithValues.length > 0 
+          ? ratingsWithValues.reduce((sum, rating) => sum + rating, 0) / ratingsWithValues.length
+          : 0;
+
+        stats[list.id] = { itemCount, averageRating };
+      }
+      
+      setListStats(stats);
     } catch (error) {
       console.error('Error fetching lists:', error);
     } finally {
@@ -56,6 +70,18 @@ const Lists: React.FC = () => {
       toast.success('List deleted successfully');
     } else {
       toast.error('Failed to delete list');
+    }
+  };
+
+  const handleUpdateCover = async (listId: string, coverUrl: string | null) => {
+    const success = await listsService.updateList(listId, { cover_image_url: coverUrl });
+    if (success) {
+      setLists(lists.map(list => 
+        list.id === listId ? { ...list, cover_image_url: coverUrl } : list
+      ));
+      toast.success('Cover image updated successfully');
+    } else {
+      toast.error('Failed to update cover image');
     }
   };
 
@@ -144,55 +170,15 @@ const Lists: React.FC = () => {
                 : 'space-y-4'
             }>
               {filteredLists.map((list, index) => (
-                <AnimatedTransition key={list.id} variant="slideUp" delay={0.1 * index}>
-                  <Card className="hover:shadow-md transition-shadow">
-                    <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-                      <div className="flex-1">
-                        <CardTitle className="text-lg font-medium line-clamp-1">
-                          <Link 
-                            to={`/lists/${list.id}`}
-                            className="hover:text-primary transition-colors"
-                          >
-                            {list.name}
-                          </Link>
-                        </CardTitle>
-                        {list.description && (
-                          <CardDescription className="line-clamp-2 mt-1">
-                            {list.description}
-                          </CardDescription>
-                        )}
-                      </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
-                            <Link to={`/lists/${list.id}/edit`}>Edit List</Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            className="text-destructive"
-                            onClick={() => handleDeleteList(list.id)}
-                          >
-                            Delete List
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <span>
-                          {list.privacy_setting === 'public' ? 'Public' : 'Private'}
-                        </span>
-                        <span>
-                          {new Date(list.updated_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </AnimatedTransition>
+                <EnhancedListCard
+                  key={list.id}
+                  list={list}
+                  itemCount={listStats[list.id]?.itemCount || 0}
+                  averageRating={listStats[list.id]?.averageRating}
+                  onUpdateCover={handleUpdateCover}
+                  onDelete={handleDeleteList}
+                  index={index}
+                />
               ))}
             </div>
           </AnimatedTransition>
