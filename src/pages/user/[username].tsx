@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -11,6 +10,7 @@ import { ProfileSocialLink } from '@/lib/profile';
 import { AnimatedTransition } from '@/components/AnimatedTransition';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
+import { PublicListsSection } from '@/components/PublicListsSection';
 
 interface ProfileData {
   username: string;

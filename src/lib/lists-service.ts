@@ -6,7 +6,7 @@ export interface CustomList {
   user_id: string;
   name: string;
   description?: string;
-  privacy_setting: 'private' | 'public';
+  is_public: boolean;
   cover_image_url?: string;
   created_at: string;
   updated_at: string;
@@ -73,7 +73,7 @@ export const listsService = {
         user_id: userId,
         name: listData.name!,
         description: listData.description,
-        privacy_setting: listData.privacy_setting || 'private',
+        is_public: listData.is_public || false,
         cover_image_url: listData.cover_image_url
       })
       .select()

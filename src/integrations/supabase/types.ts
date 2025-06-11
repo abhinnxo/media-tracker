@@ -15,8 +15,9 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          image_url: string | null
+          is_public: boolean | null
           name: string
-          privacy_setting: string
           updated_at: string
           user_id: string
         }
@@ -25,8 +26,9 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
+          is_public?: boolean | null
           name: string
-          privacy_setting?: string
           updated_at?: string
           user_id: string
         }
@@ -35,8 +37,9 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          image_url?: string | null
+          is_public?: boolean | null
           name?: string
-          privacy_setting?: string
           updated_at?: string
           user_id?: string
         }
