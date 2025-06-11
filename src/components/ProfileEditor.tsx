@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Switch } from '@/components/ui/switch';
 import { User, Upload, LinkIcon, Image as ImageIcon } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,10 +26,13 @@ export const ProfileEditor = () => {
   const [pronouns, setPronouns] = React.useState(profile.pronouns || 'they/them');
   const [websiteUrl, setWebsiteUrl] = React.useState('');
   const [location, setLocation] = React.useState((profile as any).location || '');
+  const [isPublic, setIsPublic] = React.useState((profile as any).isPublic || false);
   const [loading, setLoading] = React.useState(false);
   const [usernameAvailable, setUsernameAvailable] = React.useState<boolean | null>(null);
   const [usernameChecking, setUsernameChecking] = React.useState(false);
   const [originalUsername, setOriginalUsername] = React.useState('');
+  const [imageKey, setImageKey] = React.useState(Date.now());
+  const [bannerKey, setBannerKey] = React.useState(Date.now());
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const bannerInputRef = React.useRef<HTMLInputElement>(null);
   
@@ -48,6 +52,7 @@ export const ProfileEditor = () => {
           setWebsiteUrl(dbProfile.website || '');
           setOriginalUsername(dbProfile.username || '');
           setLocation(dbProfile.location || '');
+          setIsPublic(dbProfile.isPublic || false);
           
           // Update global state
           updateProfileState(dbProfile);
@@ -106,15 +111,21 @@ export const ProfileEditor = () => {
       const avatarUrl = await profileService.uploadAvatar(file, user.id);
       
       if (avatarUrl) {
-        // Update local profile state
+        // Add cache-busting timestamp
+        const urlWithTimestamp = `${avatarUrl}?t=${Date.now()}`;
+        
+        // Update local profile state immediately
         const updatedProfile = { 
           ...profile,
-          image: avatarUrl 
+          image: urlWithTimestamp 
         };
         
         // Save to Supabase and update local state
         await profileService.updateProfile(updatedProfile, user.id);
         updateProfileState(updatedProfile);
+        
+        // Force image refresh
+        setImageKey(Date.now());
         
         toast({
           title: "Image updated",
@@ -143,13 +154,19 @@ export const ProfileEditor = () => {
       const bannerUrl = await profileService.uploadBannerImage(file, user.id);
       
       if (bannerUrl) {
+        // Add cache-busting timestamp
+        const urlWithTimestamp = `${bannerUrl}?t=${Date.now()}`;
+        
         const updatedProfile = { 
           ...profile,
-          bannerUrl 
+          bannerUrl: urlWithTimestamp
         };
         
         await profileService.updateProfile(updatedProfile, user.id);
         updateProfileState(updatedProfile);
+        
+        // Force banner refresh
+        setBannerKey(Date.now());
         
         toast({
           title: "Banner updated",
@@ -209,7 +226,8 @@ export const ProfileEditor = () => {
         about,
         pronouns,
         website: websiteUrl || null,
-        location: location || null
+        location: location || null,
+        isPublic
       };
       
       // Save to Supabase
@@ -306,11 +324,26 @@ export const ProfileEditor = () => {
     return "";
   };
   
+  // Generate user initials for default avatar
+  const getUserInitials = () => {
+    if (name) {
+      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+    if (username) {
+      return username.slice(0, 2).toUpperCase();
+    }
+    if (user?.email) {
+      return user.email.slice(0, 2).toUpperCase();
+    }
+    return 'U';
+  };
+  
   return (
     <div className="space-y-6">
       {/* Banner Image Section */}
       <div className="relative">
         <div 
+          key={bannerKey}
           className="w-full h-32 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-lg overflow-hidden"
           style={{
             backgroundImage: (profile as any).bannerUrl ? `url(${(profile as any).bannerUrl})` : undefined,
@@ -341,10 +374,13 @@ export const ProfileEditor = () => {
 
       <div className="flex flex-col items-center sm:flex-row sm:items-start gap-6">
         <div className="flex flex-col items-center gap-2">
-          <Avatar className="h-24 w-24">
-            <AvatarImage src={profile.image} alt={name} />
-            <AvatarFallback className="text-2xl">
-              <User className="h-12 w-12" />
+          <Avatar className="h-24 w-24" key={imageKey}>
+            <AvatarImage 
+              src={profile.image} 
+              alt={name || username || 'User'} 
+            />
+            <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
+              {profile.image ? <User className="h-12 w-12" /> : getUserInitials()}
             </AvatarFallback>
           </Avatar>
           <input 
@@ -498,6 +534,21 @@ export const ProfileEditor = () => {
             <Label htmlFor="they-them">They/Them</Label>
           </div>
         </RadioGroup>
+      </div>
+
+      <div className="flex items-center justify-between space-x-2 p-4 border rounded-lg">
+        <div className="space-y-0.5">
+          <Label htmlFor="public-profile">Public Profile</Label>
+          <p className="text-sm text-muted-foreground">
+            Make your profile visible to everyone
+          </p>
+        </div>
+        <Switch
+          id="public-profile"
+          checked={isPublic}
+          onCheckedChange={setIsPublic}
+          disabled={loading}
+        />
       </div>
       
       <div className="flex justify-between">

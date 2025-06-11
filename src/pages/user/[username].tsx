@@ -4,7 +4,7 @@ import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, BookOpen, Film, ThumbsUp, Calendar, LinkIcon } from 'lucide-react';
+import { User, BookOpen, Film, ThumbsUp, Calendar, LinkIcon, Lock } from 'lucide-react';
 import { MediaCard } from '@/components/MediaCard';
 import { MediaItem } from '@/lib/types';
 import { ProfileSocialLink } from '@/lib/profile';
@@ -16,10 +16,13 @@ interface ProfileData {
   username: string;
   full_name: string | null;
   avatar_url: string | null;
+  banner_url: string | null;
   about: string | null;
   pronouns: string | null;
   theme: string | null;
   website: string | null;
+  location: string | null;
+  is_public: boolean | null;
   user_id: string;
 }
 
@@ -28,6 +31,7 @@ const UserProfile = () => {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [showcaseItems, setShowcaseItems] = useState<MediaItem[]>([]);
   const [socialLinks, setSocialLinks] = useState<ProfileSocialLink[]>([]);
+  const [stats, setStats] = useState({ totalItems: 0, favoriteGenres: [], joinDate: '' });
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   
@@ -52,42 +56,86 @@ const UserProfile = () => {
         
         setProfile(profileData as ProfileData);
         
-        // Get showcase items for this user
-        if (profileData.user_id) {
-          // First get IDs of showcased items
-          const { data: showcaseData } = await supabase
-            .from('showcase_items')
-            .select('media_id')
-            .eq('user_id', profileData.user_id);
-          
-          if (showcaseData && showcaseData.length > 0) {
-            // Then get the actual media items
-            const mediaIds = showcaseData.map(item => item.media_id);
-            const { data: mediaData } = await supabase
-              .from('media_items')
-              .select('*')
-              .in('id', mediaIds);
-              
-            if (mediaData) {
-              setShowcaseItems(mediaData as MediaItem[]);
-            }
-          }
+        // Check if profile is public
+        if (!profileData.is_public) {
+          setLoading(false);
+          return; // Don't load additional data for private profiles
         }
         
-        // Load social links from local storage (temporary solution)
-        // In a real app, these would typically be stored in the database
-        try {
-          const storedProfile = localStorage.getItem('media-tracker-profile');
-          if (storedProfile) {
-            const profileData = JSON.parse(storedProfile);
-            const profileState = profileData.state.profile;
-            
-            if (profileState && profileState.socialLinks) {
-              setSocialLinks(profileState.socialLinks);
-            }
+        // Get showcase items for this user (only if public)
+        if (profileData.user_id) {
+          // Get showcase items from profile_showcase table
+          const { data: showcaseData } = await supabase
+            .from('profile_showcase')
+            .select('*')
+            .eq('user_id', profileData.user_id)
+            .order('sort_order');
+          
+          if (showcaseData && showcaseData.length > 0) {
+            // Convert showcase data to MediaItem format
+            const mediaItems = showcaseData.map(item => ({
+              id: item.item_id,
+              title: item.title,
+              image_url: item.image_url,
+              category: item.item_type,
+              status: 'completed',
+              rating: null,
+              tags: [],
+              description: null,
+              start_date: null,
+              end_date: null,
+              notes: null,
+              created_at: item.created_at,
+              updated_at: item.created_at,
+              user_id: item.user_id
+            }));
+            setShowcaseItems(mediaItems as MediaItem[]);
           }
-        } catch (e) {
-          console.error('Error parsing profile data from storage:', e);
+
+          // Get social links
+          const { data: socialData } = await supabase
+            .from('profile_social_links')
+            .select('*')
+            .eq('user_id', profileData.user_id)
+            .eq('is_visible', true)
+            .order('sort_order');
+
+          if (socialData) {
+            const formattedLinks = socialData.map(link => ({
+              platform: link.platform,
+              url: link.url
+            }));
+            setSocialLinks(formattedLinks);
+          }
+
+          // Get user stats
+          const { data: mediaData } = await supabase
+            .from('media_items')
+            .select('category, created_at')
+            .eq('user_id', profileData.user_id);
+
+          if (mediaData) {
+            const totalItems = mediaData.length;
+            const categories = mediaData.reduce((acc: any, item) => {
+              acc[item.category] = (acc[item.category] || 0) + 1;
+              return acc;
+            }, {});
+            
+            const favoriteGenres = Object.entries(categories)
+              .sort(([,a], [,b]) => (b as number) - (a as number))
+              .slice(0, 3)
+              .map(([genre]) => genre);
+
+            const joinDate = mediaData.length > 0 
+              ? new Date(Math.min(...mediaData.map(item => new Date(item.created_at).getTime())))
+              : new Date();
+
+            setStats({
+              totalItems,
+              favoriteGenres,
+              joinDate: joinDate.toLocaleDateString()
+            });
+          }
         }
       } catch (error) {
         console.error('Error in profile fetch:', error);
@@ -162,6 +210,17 @@ const UserProfile = () => {
         return <LinkIcon size={16} />;
     }
   };
+
+  // Generate user initials for default avatar
+  const getUserInitials = () => {
+    if (profile?.full_name) {
+      return profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+    if (profile?.username) {
+      return profile.username.slice(0, 2).toUpperCase();
+    }
+    return 'U';
+  };
   
   if (loading) {
     return (
@@ -196,10 +255,58 @@ const UserProfile = () => {
       </div>
     );
   }
+
+  // Show private profile message
+  if (profile && !profile.is_public) {
+    return (
+      <div className="container max-w-4xl mx-auto py-8 px-4">
+        <AnimatedTransition variant="fadeIn">
+          <Card className="mb-8">
+            <CardContent className="pt-6 flex flex-col items-center justify-center py-12">
+              <Lock className="h-16 w-16 text-muted-foreground mb-4" />
+              <h2 className="text-2xl font-bold mb-2">Private Profile</h2>
+              <p className="text-center text-muted-foreground mb-4">
+                This profile is set to private by the user.
+              </p>
+              <div className="flex items-center gap-4 mb-6">
+                <Avatar className="h-16 w-16">
+                  <AvatarImage src={profile?.avatar_url || ''} alt={profile?.full_name || profile?.username || ''} />
+                  <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
+                    {getUserInitials()}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h3 className="text-lg font-semibold">{profile?.full_name || profile?.username}</h3>
+                  {profile?.username && profile?.username !== profile?.full_name && (
+                    <p className="text-muted-foreground">@{profile.username}</p>
+                  )}
+                </div>
+              </div>
+              <Link to="/">
+                <Button variant="outline">Go Home</Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </AnimatedTransition>
+      </div>
+    );
+  }
   
   return (
     <div className="container max-w-4xl mx-auto py-8 px-4">
       <AnimatedTransition variant="fadeIn">
+        {/* Banner Section */}
+        {profile?.banner_url && (
+          <div 
+            className="w-full h-48 md:h-64 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-lg overflow-hidden mb-6"
+            style={{
+              backgroundImage: `url(${profile.banner_url})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
+          />
+        )}
+
         <Card className="mb-8">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-2xl">User Profile</CardTitle>
@@ -214,8 +321,8 @@ const UserProfile = () => {
               <div className="flex flex-col items-center">
                 <Avatar className="h-32 w-32 mb-4">
                   <AvatarImage src={profile?.avatar_url || ''} alt={profile?.full_name || profile?.username || ''} />
-                  <AvatarFallback className="text-4xl">
-                    <User className="h-16 w-16" />
+                  <AvatarFallback className="text-4xl bg-primary text-primary-foreground">
+                    {getUserInitials()}
                   </AvatarFallback>
                 </Avatar>
                 
@@ -226,6 +333,9 @@ const UserProfile = () => {
                 )}
                 {profile?.pronouns && (
                   <p className="text-sm text-muted-foreground mt-1">{profile.pronouns}</p>
+                )}
+                {profile?.location && (
+                  <p className="text-sm text-muted-foreground mt-1">{profile.location}</p>
                 )}
                 
                 {/* Social links */}
@@ -258,7 +368,7 @@ const UserProfile = () => {
                 
                 {/* Website */}
                 {profile?.website && (
-                  <div className="flex items-center gap-2 text-primary">
+                  <div className="flex items-center gap-2 text-primary mb-4">
                     <LinkIcon size={16} />
                     <a 
                       href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`}
@@ -268,6 +378,39 @@ const UserProfile = () => {
                     >
                       {profile.website.replace(/^https?:\/\//, '')}
                     </a>
+                  </div>
+                )}
+
+                {/* Stats */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6">
+                  <div className="text-center p-3 bg-secondary/50 rounded-lg">
+                    <div className="text-2xl font-bold text-primary">{stats.totalItems}</div>
+                    <div className="text-sm text-muted-foreground">Items Tracked</div>
+                  </div>
+                  <div className="text-center p-3 bg-secondary/50 rounded-lg">
+                    <div className="text-lg font-bold text-primary">{stats.favoriteGenres.length}</div>
+                    <div className="text-sm text-muted-foreground">Favorite Genres</div>
+                  </div>
+                  <div className="text-center p-3 bg-secondary/50 rounded-lg col-span-2 md:col-span-1">
+                    <div className="text-sm font-bold text-primary">{stats.joinDate}</div>
+                    <div className="text-sm text-muted-foreground">Member Since</div>
+                  </div>
+                </div>
+
+                {/* Favorite Genres */}
+                {stats.favoriteGenres.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium mb-2">Top Categories</h4>
+                    <div className="flex gap-2 flex-wrap">
+                      {stats.favoriteGenres.map((genre, index) => (
+                        <span 
+                          key={index}
+                          className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-md"
+                        >
+                          {genre}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
