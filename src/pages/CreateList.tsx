@@ -1,25 +1,44 @@
-
-import React, { useState } from 'react';
-import { Layout } from '@/components/Layout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useForm } from 'react-hook-form';
-import { ArrowLeft, Upload } from 'lucide-react';
-import { AnimatedTransition } from '@/components/AnimatedTransition';
-import { listsService } from '@/lib/lists-service';
-import { useAuth } from '@/contexts/AuthContext';
-import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+import React, { useState } from "react";
+import { Layout } from "@/components/Layout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { ArrowLeft, Upload } from "lucide-react";
+import { AnimatedTransition } from "@/components/AnimatedTransition";
+import { listsService } from "@/lib/lists-service";
+import { useAuth } from "@/contexts/AuthContext";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 interface CreateListForm {
   name: string;
   description: string;
-  privacy_setting: 'private' | 'public';
+  privacy_setting: "private" | "public";
   cover_image_url?: string;
 }
 
@@ -30,16 +49,16 @@ const CreateList: React.FC = () => {
 
   const form = useForm<CreateListForm>({
     defaultValues: {
-      name: '',
-      description: '',
-      privacy_setting: 'private',
-      cover_image_url: ''
-    }
+      name: "",
+      description: "",
+      privacy_setting: "private",
+      cover_image_url: "",
+    },
   });
 
   const onSubmit = async (data: CreateListForm) => {
     if (!user) {
-      toast.error('You must be logged in to create a list');
+      toast.error("You must be logged in to create a list");
       return;
     }
 
@@ -47,14 +66,14 @@ const CreateList: React.FC = () => {
     try {
       const newList = await listsService.createList(user.id, data);
       if (newList) {
-        toast.success('List created successfully!');
-        navigate('/lists');
+        toast.success("List created successfully!");
+        navigate("/lists");
       } else {
-        toast.error('Failed to create list');
+        toast.error("Failed to create list");
       }
     } catch (error) {
-      console.error('Error creating list:', error);
-      toast.error('Failed to create list');
+      console.error("Error creating list:", error);
+      toast.error("Failed to create list");
     } finally {
       setIsLoading(false);
     }
@@ -65,18 +84,12 @@ const CreateList: React.FC = () => {
       <div className="max-w-2xl mx-auto space-y-6">
         <AnimatedTransition variant="fadeIn">
           <div className="flex items-center gap-4 mb-6">
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/lists">
-                <ArrowLeft className="h-4 w-4" />
-                Back to Lists
-              </Link>
-            </Button>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-semibold">Create New List</h1>
-              <p className="text-muted-foreground text-sm sm:text-base">
-                Organize your media into custom collections
-              </p>
-            </div>
+            <h1 className="text-2xl sm:text-3xl font-semibold">
+              Create New List
+            </h1>
+            <p className="text-muted-foreground text-sm sm:text-base">
+              Organize your media into custom collections
+            </p>
           </div>
         </AnimatedTransition>
 
@@ -90,18 +103,21 @@ const CreateList: React.FC = () => {
             </CardHeader>
             <CardContent>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-6"
+                >
                   <FormField
                     control={form.control}
                     name="name"
-                    rules={{ required: 'List name is required' }}
+                    rules={{ required: "List name is required" }}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>List Name *</FormLabel>
                         <FormControl>
-                          <Input 
-                            placeholder="Enter list name..." 
-                            {...field} 
+                          <Input
+                            placeholder="Enter list name..."
+                            {...field}
                             disabled={isLoading}
                           />
                         </FormControl>
@@ -120,15 +136,16 @@ const CreateList: React.FC = () => {
                       <FormItem>
                         <FormLabel>Description</FormLabel>
                         <FormControl>
-                          <Textarea 
+                          <Textarea
                             placeholder="Describe what this list is about..."
                             rows={3}
-                            {...field} 
+                            {...field}
                             disabled={isLoading}
                           />
                         </FormControl>
                         <FormDescription>
-                          Optional description to help you remember what this list is for
+                          Optional description to help you remember what this
+                          list is for
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -141,15 +158,23 @@ const CreateList: React.FC = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Privacy Setting</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoading}>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          disabled={isLoading}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select privacy setting" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="private">Private - Only I can see this list</SelectItem>
-                            <SelectItem value="public">Public - Anyone can view this list</SelectItem>
+                            <SelectItem value="private">
+                              Private - Only I can see this list
+                            </SelectItem>
+                            <SelectItem value="public">
+                              Public - Anyone can view this list
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                         <FormDescription>
@@ -168,14 +193,16 @@ const CreateList: React.FC = () => {
                         <FormLabel>Cover Image URL</FormLabel>
                         <FormControl>
                           <div className="space-y-2">
-                            <Input 
+                            <Input
                               placeholder="https://example.com/image.jpg"
-                              {...field} 
+                              {...field}
                               disabled={isLoading}
                             />
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                               <Upload className="h-4 w-4" />
-                              <span>Enter an image URL for your list cover</span>
+                              <span>
+                                Enter an image URL for your list cover
+                              </span>
                             </div>
                           </div>
                         </FormControl>
@@ -188,10 +215,19 @@ const CreateList: React.FC = () => {
                   />
 
                   <div className="flex gap-3 pt-4">
-                    <Button type="submit" disabled={isLoading} className="flex-1">
-                      {isLoading ? 'Creating...' : 'Create List'}
+                    <Button
+                      type="submit"
+                      disabled={isLoading}
+                      className="flex-1"
+                    >
+                      {isLoading ? "Creating..." : "Create List"}
                     </Button>
-                    <Button type="button" variant="outline" asChild disabled={isLoading}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      asChild
+                      disabled={isLoading}
+                    >
                       <Link to="/lists">Cancel</Link>
                     </Button>
                   </div>
