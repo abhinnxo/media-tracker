@@ -33,25 +33,54 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
 
   // Generate user initials for fallback
   const getUserInitials = () => {
+    // Try profile name first
     if (profile.name) {
       return profile.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     }
+    // Try Google metadata name
+    if (user?.user_metadata?.full_name) {
+      return user.user_metadata.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+    if (user?.user_metadata?.name) {
+      return user.user_metadata.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+    // Try profile username
     if (profile.username) {
       return profile.username.slice(0, 2).toUpperCase();
     }
+    // Try email
     if (user?.email) {
       return user.email.slice(0, 2).toUpperCase();
     }
     return 'U';
   };
 
-  const displayName = profile.name || profile.username || user?.email?.split('@')[0] || 'User';
+  // Get display name with Google data priority
+  const getDisplayName = () => {
+    if (profile.name) return profile.name;
+    if (user?.user_metadata?.full_name) return user.user_metadata.full_name;
+    if (user?.user_metadata?.name) return user.user_metadata.name;
+    if (profile.username) return profile.username;
+    if (user?.email) return user.email.split('@')[0];
+    return 'User';
+  };
+
+  // Get avatar URL with Google data priority
+  const getAvatarUrl = () => {
+    if (profile.image) return profile.image;
+    if (user?.user_metadata?.avatar_url) return user.user_metadata.avatar_url;
+    if (user?.user_metadata?.picture) return user.user_metadata.picture;
+    return null;
+  };
+
+  const displayName = getDisplayName();
+  const avatarUrl = getAvatarUrl();
 
   if (showName) {
     return (
       <div className={`flex items-center gap-2 ${className}`}>
         <Avatar className={sizeClasses[size]}>
-          <AvatarImage src={profile.image} alt={displayName} />
+          <AvatarImage src={avatarUrl} alt={displayName} />
           <AvatarFallback className={`${textSizes[size]} bg-primary text-primary-foreground`}>
             {getUserInitials()}
           </AvatarFallback>
@@ -68,7 +97,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
 
   return (
     <Avatar className={`${sizeClasses[size]} ${className}`}>
-      <AvatarImage src={profile.image} alt={displayName} />
+      <AvatarImage src={avatarUrl} alt={displayName} />
       <AvatarFallback className={`${textSizes[size]} bg-primary text-primary-foreground`}>
         {getUserInitials()}
       </AvatarFallback>

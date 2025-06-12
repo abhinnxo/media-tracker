@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -81,6 +82,14 @@ const Register: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const AuthDivider = () => (
+    <div className="flex items-center my-4">
+      <div className="flex-1 border-t border-border"></div>
+      <span className="px-4 text-sm text-muted-foreground">or</span>
+      <div className="flex-1 border-t border-border"></div>
+    </div>
+  );
   
   if (success) {
     return (
@@ -131,15 +140,19 @@ const Register: React.FC = () => {
             </CardDescription>
           </CardHeader>
           
-          <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-4">
-              {error && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-              
+          <CardContent className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            <GoogleSignInButton mode="signup" />
+            
+            <AuthDivider />
+            
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -176,9 +189,7 @@ const Register: React.FC = () => {
                   autoComplete="new-password"
                 />
               </div>
-            </CardContent>
-            
-            <CardFooter className="flex flex-col space-y-4">
+
               <Button
                 type="submit"
                 className="w-full"
@@ -193,21 +204,23 @@ const Register: React.FC = () => {
                   'Register'
                 )}
               </Button>
-              
-              <div className="text-center text-sm">
-                Already have an account?{' '}
-                <Link to="/login" className="text-primary hover:underline">
-                  Login
-                </Link>
-              </div>
-              
-              <div className="text-center text-sm">
-                <Link to="/" className="text-muted-foreground hover:underline">
-                  Back to home
-                </Link>
-              </div>
-            </CardFooter>
-          </form>
+            </form>
+          </CardContent>
+          
+          <CardFooter className="flex flex-col space-y-4">
+            <div className="text-center text-sm">
+              Already have an account?{' '}
+              <Link to="/login" className="text-primary hover:underline">
+                Login
+              </Link>
+            </div>
+            
+            <div className="text-center text-sm">
+              <Link to="/" className="text-muted-foreground hover:underline">
+                Back to home
+              </Link>
+            </div>
+          </CardFooter>
         </Card>
       </AnimatedTransition>
     </div>

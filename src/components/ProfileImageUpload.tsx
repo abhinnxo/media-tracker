@@ -2,8 +2,10 @@
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { ImageUpload } from '@/components/ImageUpload';
-import { Camera, User } from 'lucide-react';
+import { Camera, User, Upload, X } from 'lucide-react';
+import { storageService } from '@/lib/storage-service';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/hooks/use-toast';
 
 interface ProfileImageUploadProps {
   currentImage?: string;
@@ -22,6 +24,8 @@ export const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
   size = 'lg',
   showUploadButton = true
 }) => {
+  const { user } = useAuth();
+
   const sizeClasses = {
     sm: 'h-16 w-16',
     md: 'h-24 w-24',
@@ -33,6 +37,35 @@ export const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
       return userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     }
     return 'U';
+  };
+
+  const handleFileUpload = async (file: File) => {
+    if (!user) return;
+
+    try {
+      const imageUrl = await storageService.uploadImage(file, user.id);
+      if (imageUrl) {
+        onImageUpload(imageUrl);
+        toast({
+          title: "Success",
+          description: "Profile image uploaded successfully"
+        });
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to upload image"
+      });
+    }
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      handleFileUpload(file);
+    }
   };
 
   return (
@@ -48,19 +81,21 @@ export const ProfileImageUpload: React.FC<ProfileImageUploadProps> = ({
 
       {showUploadButton && (
         <div className="space-y-2">
-          <ImageUpload
-            currentImage={currentImage}
-            onImageUpload={onImageUpload}
-            onImageRemove={onImageRemove}
-            bucketName="avatars"
-            acceptedTypes={['image/*']}
-            maxSize={5}
-          >
-            <Button variant="outline" size="sm" className="flex items-center gap-2">
-              <Camera className="h-4 w-4" />
-              {currentImage ? 'Change Photo' : 'Upload Photo'}
+          <label htmlFor="profile-image-upload">
+            <Button variant="outline" size="sm" className="flex items-center gap-2" asChild>
+              <div>
+                <Camera className="h-4 w-4" />
+                {currentImage ? 'Change Photo' : 'Upload Photo'}
+                <input
+                  id="profile-image-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+              </div>
             </Button>
-          </ImageUpload>
+          </label>
 
           {currentImage && (
             <Button

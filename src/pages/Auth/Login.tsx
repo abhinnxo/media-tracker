@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -48,6 +49,14 @@ const Login: React.FC = () => {
     }
   };
 
+  const AuthDivider = () => (
+    <div className="flex items-center my-4">
+      <div className="flex-1 border-t border-border"></div>
+      <span className="px-4 text-sm text-muted-foreground">or</span>
+      <div className="flex-1 border-t border-border"></div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-muted/30">
       <AnimatedTransition variant="fadeIn" className="w-full max-w-sm sm:max-w-md">
@@ -59,15 +68,19 @@ const Login: React.FC = () => {
             </CardDescription>
           </CardHeader>
 
-          <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-4">
-              {error && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
+          <CardContent className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
+            <GoogleSignInButton mode="signin" />
+            
+            <AuthDivider />
+
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -100,9 +113,7 @@ const Login: React.FC = () => {
                   autoComplete="current-password"
                 />
               </div>
-            </CardContent>
 
-            <CardFooter className="flex flex-col space-y-4">
               <Button
                 type="submit"
                 className="w-full"
@@ -117,21 +128,23 @@ const Login: React.FC = () => {
                   'Login'
                 )}
               </Button>
+            </form>
+          </CardContent>
 
-              <div className="text-center text-xs sm:text-sm">
-                Don't have an account?{' '}
-                <Link to="/register" className="text-primary hover:underline">
-                  Register
-                </Link>
-              </div>
+          <CardFooter className="flex flex-col space-y-4">
+            <div className="text-center text-xs sm:text-sm">
+              Don't have an account?{' '}
+              <Link to="/register" className="text-primary hover:underline">
+                Register
+              </Link>
+            </div>
 
-              <div className="text-center text-xs sm:text-sm">
-                <Link to="/" className="text-muted-foreground hover:underline">
-                  Back to home
-                </Link>
-              </div>
-            </CardFooter>
-          </form>
+            <div className="text-center text-xs sm:text-sm">
+              <Link to="/" className="text-muted-foreground hover:underline">
+                Back to home
+              </Link>
+            </div>
+          </CardFooter>
         </Card>
       </AnimatedTransition>
     </div>
