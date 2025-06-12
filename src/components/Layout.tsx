@@ -16,6 +16,7 @@ import {
   LogOut,
   Sun,
   Moon,
+  Palette,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -29,18 +30,19 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { UserAvatar } from "@/components/UserAvatar";
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
+// Updated navigation without Profile
 const navigation = [
   { name: "Home", href: "/home", icon: Home },
   { name: "Library", href: "/library", icon: Library },
   { name: "My Lists", href: "/lists", icon: List },
   { name: "Add Media", href: "/add", icon: Plus },
   { name: "Explore", href: "/explore", icon: Search },
-  { name: "Profile", href: "/profile", icon: User },
 ];
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
@@ -115,17 +117,23 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   (!isCollapsed || mobile) ? "px-3" : "px-0 justify-center"
                 )}
               >
-                <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                  <span className="text-primary-foreground text-xs font-medium">
-                    {user.email?.charAt(0).toUpperCase()}
-                  </span>
-                </div>
+                <UserAvatar size="sm" />
                 {(!isCollapsed || mobile) && (
-                  <span className="truncate text-sm">{user.email}</span>
+                  <span className="truncate text-sm">
+                    {user.user_metadata?.full_name || user.user_metadata?.name || user.email}
+                  </span>
                 )}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={() => window.location.href = '/profile'}>
+                <User className="mr-2 h-4 w-4" />
+                Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => window.location.href = '/profile'}>
+                <Palette className="mr-2 h-4 w-4" />
+                Appearance
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={toggleTheme}>
                 {theme === "dark" ? (
                   <>
@@ -215,14 +223,19 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center">
-                      <span className="text-primary-foreground text-xs font-medium">
-                        {user.email?.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
+                    <UserAvatar size="sm" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => window.location.href = '/profile'}>
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => window.location.href = '/profile'}>
+                    <Palette className="mr-2 h-4 w-4" />
+                    Appearance
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Log Out

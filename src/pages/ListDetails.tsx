@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { listsService } from '@/lib/lists-service';
-import { CustomList, MediaItem } from '@/lib/types';
+import { MediaItem } from '@/lib/types';
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -46,6 +46,17 @@ import {
 } from 'lucide-react';
 import { AnimatedTransition } from '@/components/AnimatedTransition';
 
+interface CustomList {
+  id: string;
+  user_id: string;
+  name: string;
+  description?: string;
+  image_url?: string;
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 const ListDetails = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
@@ -67,13 +78,32 @@ const ListDetails = () => {
     setLoading(true);
     try {
       const [listData, itemsData] = await Promise.all([
-        listsService.getListById(id, user.id),
-        listsService.getListItems(id, user.id)
+        listsService.getListById(id),
+        listsService.getListItems(id)
       ]);
 
       if (listData) {
         setList(listData);
-        setItems(itemsData);
+        // Transform the list items data to match MediaItem interface
+        const mediaItems = itemsData.map((item: any) => ({
+          id: item.id,
+          title: item.media_title || item.title || 'Untitled',
+          description: item.media_description || item.description || '',
+          image_url: item.media_image_url || item.image_url || '',
+          category: item.media_category || item.category || 'other',
+          status: item.status || 'want_to_watch',
+          rating: item.rating || null,
+          notes: item.notes || '',
+          tags: item.tags || [],
+          external_id: item.external_id || '',
+          source: item.source || 'manual',
+          year: item.year || null,
+          genres: item.genres || [],
+          user_id: user.id,
+          created_at: item.created_at,
+          updated_at: item.updated_at
+        }));
+        setItems(mediaItems);
       } else {
         toast({
           variant: "destructive",
@@ -98,7 +128,7 @@ const ListDetails = () => {
     if (!list || !user) return;
 
     try {
-      await listsService.deleteList(list.id, user.id);
+      await listsService.deleteList(list.id);
       toast({
         title: "List deleted",
         description: "Your list has been successfully deleted."
@@ -146,7 +176,7 @@ const ListDetails = () => {
     if (!list || !user) return;
 
     try {
-      await listsService.removeItemFromList(list.id, itemId, user.id);
+      await listsService.removeItemFromList(list.id, itemId);
       setItems(prev => prev.filter(item => item.id !== itemId));
       toast({
         title: "Item removed",
@@ -181,12 +211,12 @@ const ListDetails = () => {
           <EmptyState
             title="List not found"
             description="The list you're looking for doesn't exist or you don't have permission to view it."
-            action={
-              <Button onClick={() => navigate('/lists')}>
-                Back to Lists
-              </Button>
-            }
           />
+          <div className="flex justify-center mt-4">
+            <Button onClick={() => navigate('/lists')}>
+              Back to Lists
+            </Button>
+          </div>
         </div>
       </Layout>
     );
@@ -322,7 +352,6 @@ const ListDetails = () => {
                     <MediaCard
                       key={item.id}
                       item={item}
-                      showActions={isOwner}
                       onRemove={() => handleRemoveItem(item.id)}
                     />
                   ))}
@@ -331,13 +360,15 @@ const ListDetails = () => {
                 <EmptyState
                   title="No items in this list"
                   description={isOwner ? "Add some media items to get started." : "This list is empty."}
-                  action={isOwner ? (
-                    <Button onClick={() => navigate('/library')}>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Items
-                    </Button>
-                  ) : undefined}
                 />
+              )}
+              {items.length === 0 && isOwner && (
+                <div className="flex justify-center mt-4">
+                  <Button onClick={() => navigate('/library')}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Items
+                  </Button>
+                </div>
               )}
             </CardContent>
           </Card>

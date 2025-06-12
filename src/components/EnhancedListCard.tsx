@@ -6,11 +6,21 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Heart, MessageCircle, MoreHorizontal, Eye, Lock, Edit, Trash2, Share2, Users } from 'lucide-react';
-import { CustomList } from '@/lib/types';
 import { listsService } from '@/lib/lists-service';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+
+interface CustomList {
+  id: string;
+  user_id: string;
+  name: string;
+  description?: string;
+  image_url?: string;
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 interface EnhancedListCardProps {
   list: CustomList;
@@ -47,7 +57,7 @@ export const EnhancedListCard: React.FC<EnhancedListCardProps> = ({
 
     setIsLoading(true);
     try {
-      await listsService.deleteList(list.id, user!.id);
+      await listsService.deleteList(list.id);
       toast({
         title: "List deleted",
         description: "Your list has been successfully deleted."
