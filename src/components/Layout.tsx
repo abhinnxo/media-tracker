@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -110,29 +109,29 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="border-t p-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 className={cn(
                   "w-full justify-start gap-3",
-                  (!isCollapsed || mobile) ? "px-3" : "px-0 justify-center"
+                  !isCollapsed || mobile ? "px-3" : "px-0 justify-center"
                 )}
               >
                 <UserAvatar size="sm" />
                 {(!isCollapsed || mobile) && (
                   <span className="truncate text-sm">
-                    {user.user_metadata?.full_name || user.user_metadata?.name || user.email}
+                    {user.user_metadata?.full_name ||
+                      user.user_metadata?.name ||
+                      user.email}
                   </span>
                 )}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={() => window.location.href = '/profile'}>
+              <DropdownMenuItem
+                onClick={() => (window.location.href = "/profile")}
+              >
                 <User className="mr-2 h-4 w-4" />
                 Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => window.location.href = '/profile'}>
-                <Palette className="mr-2 h-4 w-4" />
-                Appearance
               </DropdownMenuItem>
               <DropdownMenuItem onClick={toggleTheme}>
                 {theme === "dark" ? (
@@ -227,11 +226,15 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => window.location.href = '/profile'}>
+                  <DropdownMenuItem
+                    onClick={() => (window.location.href = "/profile")}
+                  >
                     <User className="mr-2 h-4 w-4" />
                     Profile
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => window.location.href = '/profile'}>
+                  <DropdownMenuItem
+                    onClick={() => (window.location.href = "/profile")}
+                  >
                     <Palette className="mr-2 h-4 w-4" />
                     Appearance
                   </DropdownMenuItem>
