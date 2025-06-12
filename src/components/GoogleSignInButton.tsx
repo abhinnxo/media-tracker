@@ -1,36 +1,38 @@
-
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { supabase } from '@/lib/supabase';
-import { toast } from '@/hooks/use-toast';
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabase";
+import { toast } from "@/hooks/use-toast";
 
 interface GoogleSignInButtonProps {
-  mode: 'signin' | 'signup';
+  mode: "signin" | "signup";
   className?: string;
 }
 
-export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ mode, className }) => {
+export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
+  mode,
+  className,
+}) => {
   const handleGoogleSignIn = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+        provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`
-        }
+          redirectTo: `${window.location.origin}/home`,
+        },
       });
 
       if (error) {
         toast({
           variant: "destructive",
           title: "Error",
-          description: error.message
+          description: error.message,
         });
       }
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to sign in with Google"
+        description: "Failed to sign in with Google",
       });
     }
   };
@@ -59,7 +61,7 @@ export const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({ mode, cl
           d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
         />
       </svg>
-      {mode === 'signin' ? 'Continue with Google' : 'Sign up with Google'}
+      {mode === "signin" ? "Continue with Google" : "Sign up with Google"}
     </Button>
   );
 };
