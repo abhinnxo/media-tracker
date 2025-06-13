@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -172,10 +173,8 @@ const Lists: React.FC = () => {
                 <EnhancedListCard
                   key={list.id}
                   list={list}
-                  stats={{
-                    itemCount: listStats[list.id]?.itemCount || 0,
-                    averageRating: listStats[list.id]?.averageRating
-                  }}
+                  itemCount={listStats[list.id]?.itemCount || 0}
+                  averageRating={listStats[list.id]?.averageRating}
                   onUpdateCover={handleUpdateCover}
                   onDelete={handleDeleteList}
                   index={index}

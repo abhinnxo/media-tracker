@@ -1,158 +1,225 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { listsService } from '@/lib/lists-service';
+import { MediaItem } from '@/lib/types';
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Plus, Settings, Trash2 } from 'lucide-react';
-import { AnimatedTransition } from '@/components/AnimatedTransition';
-import { listsService, CustomList, ListItemWithMedia } from '@/lib/lists-service';
-import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
-import { AddItemModal } from '@/components/AddItemModal';
-import { EditListModal } from '@/components/EditListModal';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { MediaCard } from '@/components/MediaCard';
+import { EmptyState } from '@/components/EmptyState';
+import { EditListModal } from '@/components/EditListModal';
+import { AddItemModal } from '@/components/AddItemModal';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from '@/components/ui/alert-dialog';
+import { toast } from '@/hooks/use-toast';
+import {
+  ArrowLeft,
+  MoreHorizontal,
+  Edit,
+  Trash2,
+  Share2,
+  Eye,
+  Lock,
+  Plus,
+  Users,
+  Calendar,
+  Tag
+} from 'lucide-react';
+import { AnimatedTransition } from '@/components/AnimatedTransition';
 
-interface RouteParams {
-  listId?: string;
+interface CustomList {
+  id: string;
+  user_id: string;
+  name: string;
+  description?: string;
+  image_url?: string;
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
-export const ListDetails: React.FC = () => {
-  const { listId } = useParams<RouteParams>();
-  const router = useNavigate();
+const ListDetails = () => {
+  const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const navigate = useNavigate();
+  
   const [list, setList] = useState<CustomList | null>(null);
-  const [items, setItems] = useState<ListItemWithMedia[]>([]);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [items, setItems] = useState<MediaItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   useEffect(() => {
-    if (listId && user) {
-      fetchListDetails();
-      fetchListItems();
-    }
-  }, [listId, user]);
+    if (!id) return;
+    loadListData();
+  }, [id]);
 
-  const fetchListDetails = async () => {
-    if (!listId) return;
+  const loadListData = async () => {
+    if (!id || !user) return;
 
-    setIsLoading(true);
+    setLoading(true);
     try {
-      const listDetails = await listsService.getListById(listId);
-      if (listDetails) {
-        setList(listDetails);
+      const [listData, itemsData] = await Promise.all([
+        listsService.getListById(id),
+        listsService.getListItems(id)
+      ]);
+
+      if (listData) {
+        setList(listData);
+        // Transform the list items data to match MediaItem interface
+        const mediaItems = itemsData.map((item: any) => ({
+          id: item.media_id || item.id,
+          title: item.media_item?.title || item.title || 'Untitled',
+          description: item.media_item?.description || item.description || '',
+          image_url: item.media_item?.image_url || item.image_url || '',
+          category: item.media_item?.category || item.category || 'other',
+          status: item.media_item?.status || item.status || 'to-consume',
+          rating: item.media_item?.rating || item.rating || null,
+          notes: item.notes || '',
+          tags: item.media_item?.tags || item.tags || [],
+          start_date: item.media_item?.start_date || null,
+          end_date: item.media_item?.end_date || null,
+          user_id: user.id,
+          created_at: item.added_at || item.created_at,
+          updated_at: item.updated_at
+        }));
+        setItems(mediaItems);
       } else {
-        setError('List not found');
+        toast({
+          variant: "destructive",
+          title: "List not found",
+          description: "The list you're looking for doesn't exist or you don't have permission to view it."
+        });
+        navigate('/lists');
       }
-    } catch (error: any) {
-      console.error('Error fetching list details:', error);
-      setError(error.message || 'Failed to fetch list details');
+    } catch (error) {
+      console.error('Error loading list:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to load list details."
+      });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const fetchListItems = async () => {
-    if (!listId) return;
+  const handleDeleteList = async () => {
+    if (!list || !user) return;
 
-    setIsLoading(true);
     try {
-      const listItems = await listsService.getListItems(listId);
-      setItems(listItems);
-    } catch (error: any) {
-      console.error('Error fetching list items:', error);
-      setError(error.message || 'Failed to fetch list items');
-    } finally {
-      setIsLoading(false);
+      await listsService.deleteList(list.id);
+      toast({
+        title: "List deleted",
+        description: "Your list has been successfully deleted."
+      });
+      navigate('/lists');
+    } catch (error) {
+      console.error('Error deleting list:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete list."
+      });
     }
+  };
+
+  const handleShare = async () => {
+    if (!list) return;
+
+    const url = `${window.location.origin}/lists/${list.id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({
+        title: "Link copied",
+        description: "List link has been copied to clipboard."
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to copy link to clipboard."
+      });
+    }
+  };
+
+  const handleListUpdate = (updatedList: CustomList) => {
+    setList(updatedList);
+    setIsEditModalOpen(false);
+    toast({
+      title: "List updated",
+      description: "Your list has been successfully updated."
+    });
   };
 
   const handleRemoveItem = async (itemId: string) => {
-    if (!user) return;
-    
-    const success = await listsService.removeItemFromList(itemId);
-    if (success) {
-      setItems(items.filter(item => item.id !== itemId));
-      toast.success('Item removed from list');
-    } else {
-      toast.error('Failed to remove item');
+    if (!list || !user) return;
+
+    try {
+      await listsService.removeItemFromList(itemId);
+      setItems(prev => prev.filter(item => item.id !== itemId));
+      toast({
+        title: "Item removed",
+        description: "Item has been removed from the list."
+      });
+    } catch (error) {
+      console.error('Error removing item:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to remove item from list."
+      });
     }
   };
 
-  const ListItemCard = ({ item }: { item: ListItemWithMedia }) => {
-    if (!item.media_item) return null;
-
-    return (
-      <div className="group relative bg-card border rounded-lg p-4 hover:shadow-md transition-shadow">
-        <div className="flex gap-4">
-          {item.media_item.image_url ? (
-            <img
-              src={item.media_item.image_url}
-              alt={item.media_item.title}
-              className="w-16 h-16 object-cover rounded flex-shrink-0"
-            />
-          ) : (
-            <div className="w-16 h-16 bg-muted rounded flex items-center justify-center flex-shrink-0">
-              <span className="text-xs text-muted-foreground">
-                {item.media_item.title.charAt(0).toUpperCase()}
-              </span>
-            </div>
-          )}
-          
-          <div className="flex-1 min-w-0">
-            <h4 className="font-medium truncate">{item.media_item.title}</h4>
-            {item.media_item.description && (
-              <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                {item.media_item.description}
-              </p>
-            )}
-            <div className="flex items-center gap-2 mt-2">
-              <Badge variant="secondary" className="text-xs">
-                {item.media_item.category}
-              </Badge>
-              <span className="text-xs text-muted-foreground">
-                Added {new Date(item.added_at).toLocaleDateString()}
-              </span>
-            </div>
-            {item.notes && (
-              <p className="text-sm text-muted-foreground mt-2 italic">
-                "{item.notes}"
-              </p>
-            )}
-          </div>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleRemoveItem(item.id)}
-            className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-    );
+  const handleItemAdded = () => {
+    loadListData(); // Refresh the list
+    setIsAddModalOpen(false);
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
       <Layout>
-        <div className="h-screen flex items-center justify-center">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className="container mx-auto py-8">
+          <div className="flex justify-center items-center min-h-96">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
         </div>
       </Layout>
     );
   }
 
-  if (error) {
+  if (!list) {
     return (
       <Layout>
-        <div className="h-screen flex items-center justify-center text-center">
-          <div>
-            <h2 className="text-lg font-medium mb-2">Error</h2>
-            <p className="text-muted-foreground">{error}</p>
-            <Button onClick={() => router.back()} className="mt-4">
-              Go Back
+        <div className="container mx-auto py-8">
+          <EmptyState
+            title="List not found"
+            description="The list you're looking for doesn't exist or you don't have permission to view it."
+          />
+          <div className="flex justify-center mt-4">
+            <Button onClick={() => navigate('/lists')}>
+              Back to Lists
             </Button>
           </div>
         </div>
@@ -160,116 +227,179 @@ export const ListDetails: React.FC = () => {
     );
   }
 
+  const isOwner = user?.id === list.user_id;
+  const getPrivacyIcon = () => list.is_public ? <Eye className="h-4 w-4" /> : <Lock className="h-4 w-4" />;
+  const getPrivacyText = () => list.is_public ? 'Public' : 'Private';
+
   return (
-    <Layout>
-      <div className="space-y-6">
-        <AnimatedTransition variant="fadeIn">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => router.back()}
-                className="flex-shrink-0"
-              >
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                Back
-              </Button>
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-semibold">{list?.name}</h1>
-                {list?.description && (
-                  <p className="text-muted-foreground mt-1">{list.description}</p>
+    <AnimatedTransition>
+      <Layout>
+        <div className="container mx-auto py-6 space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/lists')}
+              className="gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Lists
+            </Button>
+
+            {isOwner && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setIsEditModalOpen(true)}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit List
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleShare}>
+                    <Share2 className="mr-2 h-4 w-4" />
+                    Share List
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete List
+                      </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete List</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete "{list.name}"? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeleteList} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
+
+          {/* List Header */}
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col md:flex-row gap-6">
+                {list.image_url ? (
+                  <img 
+                    src={list.image_url} 
+                    alt={list.name}
+                    className="w-full md:w-48 h-48 object-cover rounded-lg"
+                  />
+                ) : (
+                  <div className="w-full md:w-48 h-48 bg-gradient-to-br from-primary/20 to-primary/5 rounded-lg flex items-center justify-center">
+                    <Users className="h-16 w-16 text-primary/40" />
+                  </div>
+                )}
+                
+                <div className="flex-1">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <CardTitle className="text-2xl mb-2">{list.name}</CardTitle>
+                      {list.description && (
+                        <CardDescription className="text-base">
+                          {list.description}
+                        </CardDescription>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      {getPrivacyIcon()}
+                      {getPrivacyText()}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Users className="h-4 w-4" />
+                      {items.length} items
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      Created {new Date(list.created_at).toLocaleDateString()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+
+          {/* Items Section */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Items ({items.length})</CardTitle>
+                {isOwner && (
+                  <Button onClick={() => setIsAddModalOpen(true)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Items
+                  </Button>
                 )}
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowAddModal(true)}
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Add Items
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowEditModal(true)}
-              >
-                <Settings className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </AnimatedTransition>
+            </CardHeader>
+            <CardContent>
+              {items.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {items.map((item) => (
+                    <MediaCard
+                      key={item.id}
+                      item={item}
+                      onRemove={() => handleRemoveItem(item.id)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <EmptyState
+                  title="No items in this list"
+                  description={isOwner ? "Add some media items to get started." : "This list is empty."}
+                />
+              )}
+              {items.length === 0 && isOwner && (
+                <div className="flex justify-center mt-4">
+                  <Button onClick={() => setIsAddModalOpen(true)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Items
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-        {list?.cover_image_url && (
-          <AnimatedTransition variant="slideUp" delay={0.1}>
-            <div className="relative h-48 rounded-lg overflow-hidden">
-              <img
-                src={list.cover_image_url}
-                alt={list.name}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-            </div>
-          </AnimatedTransition>
-        )}
+          {/* Edit List Modal */}
+          {isEditModalOpen && (
+            <EditListModal
+              list={list}
+              isOpen={isEditModalOpen}
+              onClose={() => setIsEditModalOpen(false)}
+              onSave={handleListUpdate}
+            />
+          )}
 
-        <AnimatedTransition variant="slideUp" delay={0.2}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h2 className="text-lg font-medium">
-                Items ({items.length})
-              </h2>
-            </div>
-          </div>
-        </AnimatedTransition>
-
-        {items.length === 0 ? (
-          <AnimatedTransition variant="fadeIn" delay={0.3}>
-            <div className="text-center py-12">
-              <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-full flex items-center justify-center">
-                <Plus className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-medium mb-2">No items yet</h3>
-              <p className="text-muted-foreground mb-4">
-                Start building your list by adding some items
-              </p>
-              <Button onClick={() => setShowAddModal(true)}>
-                <Plus className="h-4 w-4 mr-1" />
-                Add Your First Item
-              </Button>
-            </div>
-          </AnimatedTransition>
-        ) : (
-          <AnimatedTransition variant="fadeIn" delay={0.3}>
-            <div className="space-y-4">
-              {items.map((item) => (
-                <ListItemCard key={item.id} item={item} />
-              ))}
-            </div>
-          </AnimatedTransition>
-        )}
-
-        {/* Add Item Modal */}
-        <AddItemModal
-          isOpen={showAddModal}
-          onClose={() => setShowAddModal(false)}
-          listId={listId!}
-          onItemAdded={fetchListItems}
-        />
-
-        {/* Edit List Modal */}
-        {list && (
-          <EditListModal
-            isOpen={showEditModal}
-            onClose={() => setShowEditModal(false)}
-            list={list}
-            onListUpdated={fetchListDetails}
-          />
-        )}
-      </div>
-    </Layout>
+          {/* Add Item Modal */}
+          {isAddModalOpen && (
+            <AddItemModal
+              isOpen={isAddModalOpen}
+              onClose={() => setIsAddModalOpen(false)}
+              listId={list.id}
+              onItemAdded={handleItemAdded}
+            />
+          )}
+        </div>
+      </Layout>
+    </AnimatedTransition>
   );
 };
 

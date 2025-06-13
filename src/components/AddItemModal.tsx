@@ -1,13 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useDebounce } from '@/hooks/use-debounce';
-import { useCachedMediaItems } from '@/hooks/use-cached-data';
 import { supabaseStore } from '@/lib/supabase-store';
 import { MediaItem } from '@/lib/types';
 import { listsService } from '@/lib/lists-service';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
-import { listCache } from '@/lib/cache-manager-v2';
 import {
   Dialog,
   DialogContent,
@@ -47,40 +45,32 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
 
   const debouncedSearch = useDebounce(searchQuery, 300);
 
-  // Use cached media items
-  const { data: userMediaItems } = useCachedMediaItems(user?.id || '');
-
   useEffect(() => {
-    if (debouncedSearch.trim() && user && userMediaItems) {
+    if (debouncedSearch.trim() && user) {
       performSearch(debouncedSearch);
     } else {
       setLocalResults([]);
       setApiResults([]);
     }
-  }, [debouncedSearch, user, userMediaItems]);
+  }, [debouncedSearch, user]);
 
   const performSearch = async (query: string) => {
-    if (!user || !userMediaItems) return;
+    if (!user) return;
 
     setIsSearching(true);
     try {
-      // Get existing list items from cache
-      const existingItems = await listCache.getData(
-        `list-items:${listId}`,
-        () => listsService.getListItems(listId),
-        { ttl: 60000 } // 1 minute cache
+      // Search local library
+      const localItems = await supabaseStore.filter(
+        { search: query },
+        user.id
       );
-      
+
+      // Get existing list items to exclude them
+      const existingItems = await listsService.getListItems(listId);
       const existingMediaIds = new Set(existingItems.map(item => item.media_id));
 
-      // Search local library with caching
-      const filteredLocalResults: SearchResult[] = userMediaItems
-        .filter(item => 
-          !existingMediaIds.has(item.id) &&
-          (item.title.toLowerCase().includes(query.toLowerCase()) ||
-           item.description?.toLowerCase().includes(query.toLowerCase()))
-        )
-        .slice(0, 10) // Limit results
+      const filteredLocalResults: SearchResult[] = localItems
+        .filter(item => !existingMediaIds.has(item.id))
         .map(item => ({
           ...item,
           source: 'library' as const,
@@ -89,9 +79,12 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
 
       setLocalResults(filteredLocalResults);
 
-      // If local results are limited, we could add API search here
-      // For now, just using local results
-      setApiResults([]);
+      // If local results are limited, search API
+      if (filteredLocalResults.length < 5) {
+        // TODO: Implement API search based on your external APIs
+        // For now, we'll just use local results
+        setApiResults([]);
+      }
     } catch (error) {
       console.error('Search error:', error);
       toast({
@@ -110,37 +103,30 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
     setAddingItems(prev => new Set([...prev, item.id]));
 
     try {
-      // Optimistic update - add to list cache immediately
-      const currentItems = await listCache.getData(
-        `list-items:${listId}`,
-        () => listsService.getListItems(listId),
-        { skipAPI: true }
-      ).catch(() => []);
-
-      const optimisticItem = {
-        id: `temp-${Date.now()}`,
-        list_id: listId,
-        media_id: item.id,
-        position: currentItems.length,
-        added_at: new Date().toISOString(),
-        notes: null,
-        added_by_user_id: user.id,
-        media_item: item
-      };
-
-      // Update cache optimistically
-      listCache.setOptimistic(`list-items:${listId}`, [...currentItems, optimisticItem]);
+      // For API results, we might need to create the media item first
+      let mediaId = item.id;
+      
+      if (item.source === 'api' && item.id === 'new') {
+        // Create new media item from API result
+        const newMediaItem = await supabaseStore.save(
+          {
+            ...item,
+            id: 'new',
+            user_id: user.id,
+          },
+          user.id
+        );
+        mediaId = newMediaItem.id;
+      }
 
       // Add item to list
-      await listsService.addItemToList(listId, item.id, user.id);
+      await listsService.addItemToList(listId, mediaId, user.id);
 
       toast({
         title: 'Item Added',
         description: `"${item.title}" has been added to your list.`,
       });
 
-      // Invalidate cache to force fresh data
-      listCache.invalidateCache(`list-items:${listId}`);
       onItemAdded();
       
       // Remove from search results
@@ -151,16 +137,10 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
       }
     } catch (error) {
       console.error('Error adding item:', error);
-      
-      // Rollback optimistic update
-      listCache.invalidateCache(`list-items:${listId}`);
-      
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error instanceof Error && error.message.includes('already in your list') 
-          ? 'This item is already in your list'
-          : 'Failed to add item to list. Please try again.',
+        description: 'Failed to add item to list. Please try again.',
       });
     } finally {
       setAddingItems(prev => {
