@@ -8,6 +8,7 @@ export interface CustomList {
   description?: string;
   is_public: boolean;
   cover_image_url?: string;
+  image_url?: string;
   created_at: string;
   updated_at: string;
 }
@@ -74,7 +75,8 @@ export const listsService = {
         name: listData.name!,
         description: listData.description,
         is_public: listData.is_public || false,
-        cover_image_url: listData.cover_image_url
+        cover_image_url: listData.cover_image_url,
+        image_url: listData.image_url
       })
       .select()
       .single();
@@ -146,6 +148,18 @@ export const listsService = {
     notes?: string,
     position?: number
   ): Promise<ListItem | null> {
+    // Check if item already exists in list
+    const { data: existingItem } = await supabase
+      .from('list_items')
+      .select('id')
+      .eq('list_id', listId)
+      .eq('media_id', mediaId)
+      .single();
+
+    if (existingItem) {
+      throw new Error('This item is already in your list');
+    }
+
     // Get the current max position if position not specified
     if (position === undefined) {
       const { data: existingItems } = await supabase
@@ -201,7 +215,7 @@ export const listsService = {
     const { error } = await supabase
       .from('list_items')
       .delete()
-      .eq('id', itemId);
+      .eq('media_id', itemId);
 
     if (error) {
       console.error('Error removing item from list:', error);

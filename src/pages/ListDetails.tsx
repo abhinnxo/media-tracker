@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { MediaCard } from '@/components/MediaCard';
 import { EmptyState } from '@/components/EmptyState';
 import { EditListModal } from '@/components/EditListModal';
+import { AddItemModal } from '@/components/AddItemModal';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -66,6 +67,7 @@ const ListDetails = () => {
   const [items, setItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -86,21 +88,19 @@ const ListDetails = () => {
         setList(listData);
         // Transform the list items data to match MediaItem interface
         const mediaItems = itemsData.map((item: any) => ({
-          id: item.id,
-          title: item.media_title || item.title || 'Untitled',
-          description: item.media_description || item.description || '',
-          image_url: item.media_image_url || item.image_url || '',
-          category: item.media_category || item.category || 'other',
-          status: item.status || 'want_to_watch',
-          rating: item.rating || null,
+          id: item.media_id || item.id,
+          title: item.media_item?.title || item.title || 'Untitled',
+          description: item.media_item?.description || item.description || '',
+          image_url: item.media_item?.image_url || item.image_url || '',
+          category: item.media_item?.category || item.category || 'other',
+          status: item.media_item?.status || item.status || 'to-consume',
+          rating: item.media_item?.rating || item.rating || null,
           notes: item.notes || '',
-          tags: item.tags || [],
-          external_id: item.external_id || '',
-          source: item.source || 'manual',
-          year: item.year || null,
-          genres: item.genres || [],
+          tags: item.media_item?.tags || item.tags || [],
+          start_date: item.media_item?.start_date || null,
+          end_date: item.media_item?.end_date || null,
           user_id: user.id,
-          created_at: item.created_at,
+          created_at: item.added_at || item.created_at,
           updated_at: item.updated_at
         }));
         setItems(mediaItems);
@@ -176,7 +176,7 @@ const ListDetails = () => {
     if (!list || !user) return;
 
     try {
-      await listsService.removeItemFromList(list.id, itemId);
+      await listsService.removeItemFromList(itemId);
       setItems(prev => prev.filter(item => item.id !== itemId));
       toast({
         title: "Item removed",
@@ -190,6 +190,11 @@ const ListDetails = () => {
         description: "Failed to remove item from list."
       });
     }
+  };
+
+  const handleItemAdded = () => {
+    loadListData(); // Refresh the list
+    setIsAddModalOpen(false);
   };
 
   if (loading) {
@@ -338,7 +343,7 @@ const ListDetails = () => {
               <div className="flex items-center justify-between">
                 <CardTitle>Items ({items.length})</CardTitle>
                 {isOwner && (
-                  <Button onClick={() => navigate('/library')}>
+                  <Button onClick={() => setIsAddModalOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" />
                     Add Items
                   </Button>
@@ -364,7 +369,7 @@ const ListDetails = () => {
               )}
               {items.length === 0 && isOwner && (
                 <div className="flex justify-center mt-4">
-                  <Button onClick={() => navigate('/library')}>
+                  <Button onClick={() => setIsAddModalOpen(true)}>
                     <Plus className="mr-2 h-4 w-4" />
                     Add Items
                   </Button>
@@ -380,6 +385,16 @@ const ListDetails = () => {
               isOpen={isEditModalOpen}
               onClose={() => setIsEditModalOpen(false)}
               onSave={handleListUpdate}
+            />
+          )}
+
+          {/* Add Item Modal */}
+          {isAddModalOpen && (
+            <AddItemModal
+              isOpen={isAddModalOpen}
+              onClose={() => setIsAddModalOpen(false)}
+              listId={list.id}
+              onItemAdded={handleItemAdded}
             />
           )}
         </div>
