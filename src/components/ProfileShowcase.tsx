@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useProfileStore } from '@/lib/profile';
 import { MediaItem } from '@/lib/types';
@@ -11,6 +10,8 @@ import { useNavigate } from 'react-router-dom';
 import { mediaStore } from '@/lib/store';
 import { useAuth } from '@/contexts/AuthContext';
 import { profileService, ShowcaseItem } from '@/lib/profile-service';
+import { ShowcaseList } from "./ProfileShowcase/ShowcaseList";
+import { AvailableLibraryList } from "./ProfileShowcase/AvailableLibraryList";
 
 const MAX_SHOWCASE_ITEMS = 5;
 
@@ -125,27 +126,6 @@ export const ProfileShowcase = () => {
     !showcaseItems.some(showcase => showcase.item_id === item.id)
   );
 
-  // Generate a row for either showcased or available item, with action button
-  const renderShowcaseRow = (item: MediaItem, actionBtn: React.ReactNode, key?: React.Key) => (
-    <div
-      className="relative group"
-      key={key ?? item.id}
-    >
-      <div className="flex bg-card rounded-lg border border-border hover:shadow-lg transition-all items-center pr-4 gap-2">
-        <div className="shrink-0 w-32" onClick={() => navigate(`/details/${item.id}`)}>
-          {/* media thumbnail via MediaCard in list variant, only render thumbnail */}
-          <MediaCard item={item} variant="list" />
-        </div>
-        <div className="flex-1">
-          {/* Empty, as MediaCard in "list" variant handles details */}
-        </div>
-        <div className="absolute top-4 right-4 flex items-center">
-          {actionBtn}
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <div className="space-y-8">
       {/* Showcase Items Section */}
@@ -167,27 +147,12 @@ export const ProfileShowcase = () => {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-3">
-            {showcasedMediaItems.map(item => {
-              const showcaseItem = showcaseItems.find(s => s.item_id === item.id);
-              return renderShowcaseRow(
-                item,
-                <Button
-                  size="icon"
-                  variant="destructive"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (showcaseItem) removeFromShowcase(showcaseItem);
-                  }}
-                  disabled={loading}
-                  aria-label="Remove from showcase"
-                >
-                  <X className="h-4 w-4" />
-                </Button>,
-                item.id
-              );
-            })}
-          </div>
+          <ShowcaseList
+            items={showcasedMediaItems}
+            showcaseItems={showcaseItems}
+            loading={loading}
+            onRemove={removeFromShowcase}
+          />
         )}
       </div>
 
@@ -205,27 +170,11 @@ export const ProfileShowcase = () => {
             </Button>
           </div>
           {availableItems.length > 0 ? (
-            <div className="grid grid-cols-1 gap-3">
-              {availableItems
-                .slice(0, 6)
-                .map(item =>
-                  renderShowcaseRow(
-                    item,
-                    <Button
-                      size="sm"
-                      variant="default"
-                      onClick={() => addToShowcase(item)}
-                      disabled={loading}
-                      aria-label="Add to showcase"
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Add
-                    </Button>,
-                    item.id
-                  )
-                )
-              }
-            </div>
+            <AvailableLibraryList
+              items={availableItems}
+              loading={loading}
+              onAdd={addToShowcase}
+            />
           ) : (
             <div className="border border-dashed rounded-lg p-8 text-center">
               <p className="text-muted-foreground mb-4">No other items in your library</p>
