@@ -22,31 +22,31 @@ export const ProfileShowcase = () => {
   const [showcaseItems, setShowcaseItems] = useState<ShowcaseItem[]>([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  
+
   // Fetch all media items and showcase
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
-      
+
       try {
         const [items, showcase] = await Promise.all([
           mediaStore.getAll(),
           profileService.getShowcaseItems(user.id)
         ]);
-        
+
         setMediaItems(items);
         setShowcaseItems(showcase);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
     };
-    
+
     fetchData();
   }, [user]);
-  
+
   const addToShowcase = async (item: MediaItem) => {
     if (!user) return;
-    
+
     if (showcaseItems.length >= MAX_SHOWCASE_ITEMS) {
       toast({
         title: "Showcase full",
@@ -55,9 +55,9 @@ export const ProfileShowcase = () => {
       });
       return;
     }
-    
+
     setLoading(true);
-    
+
     try {
       const newShowcaseItem = await profileService.addToShowcase(
         user.id,
@@ -66,10 +66,10 @@ export const ProfileShowcase = () => {
         item.title,
         item.image_url
       );
-      
+
       if (newShowcaseItem) {
         setShowcaseItems([...showcaseItems, newShowcaseItem]);
-        
+
         toast({
           title: "Item added",
           description: `"${item.title}" added to your showcase`
@@ -86,18 +86,18 @@ export const ProfileShowcase = () => {
       setLoading(false);
     }
   };
-  
+
   const removeFromShowcase = async (showcaseItem: ShowcaseItem) => {
     if (!user) return;
-    
+
     setLoading(true);
-    
+
     try {
       const success = await profileService.removeFromShowcase(showcaseItem.id);
-      
+
       if (success) {
         setShowcaseItems(showcaseItems.filter(item => item.id !== showcaseItem.id));
-        
+
         toast({
           title: "Item removed",
           description: "Item removed from your showcase"
@@ -114,29 +114,51 @@ export const ProfileShowcase = () => {
       setLoading(false);
     }
   };
-  
+
   // Get media items that are in showcase
-  const showcasedMediaItems = mediaItems.filter(item => 
+  const showcasedMediaItems = mediaItems.filter(item =>
     showcaseItems.some(showcase => showcase.item_id === item.id)
   );
-  
+
   // Get available items not in showcase
-  const availableItems = mediaItems.filter(item => 
+  const availableItems = mediaItems.filter(item =>
     !showcaseItems.some(showcase => showcase.item_id === item.id)
   );
-  
+
+  // Generate a row for either showcased or available item, with action button
+  const renderShowcaseRow = (item: MediaItem, actionBtn: React.ReactNode, key?: React.Key) => (
+    <div
+      className="relative group"
+      key={key ?? item.id}
+    >
+      <div className="flex bg-card rounded-lg border border-border hover:shadow-lg transition-all items-center pr-4 gap-2">
+        <div className="shrink-0 w-32" onClick={() => navigate(`/details/${item.id}`)}>
+          {/* media thumbnail via MediaCard in list variant, only render thumbnail */}
+          <MediaCard item={item} variant="list" />
+        </div>
+        <div className="flex-1">
+          {/* Empty, as MediaCard in "list" variant handles details */}
+        </div>
+        <div className="absolute top-4 right-4 flex items-center">
+          {actionBtn}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Showcase Items Section */}
       <div>
         <Label className="text-lg font-medium">Showcase Items</Label>
         <p className="text-sm text-muted-foreground mb-4">
           Display your favorite media (max {MAX_SHOWCASE_ITEMS} items)
         </p>
-        
+
         {showcaseItems.length === 0 ? (
           <div className="border border-dashed rounded-lg p-8 text-center">
             <p className="text-muted-foreground mb-4">Your showcase is empty</p>
-            <Button 
+            <Button
               onClick={() => navigate('/library')}
               variant="secondary"
             >
@@ -145,78 +167,69 @@ export const ProfileShowcase = () => {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-3">
             {showcasedMediaItems.map(item => {
               const showcaseItem = showcaseItems.find(s => s.item_id === item.id);
-              return (
-                <div key={item.id} className="relative group">
-                  <div onClick={() => navigate(`/details/${item.id}`)}>
-                    <MediaCard 
-                      item={item}
-                      delay={0}
-                    />
-                  </div>
-                  <Button
-                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                    size="icon"
-                    variant="destructive"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (showcaseItem) removeFromShowcase(showcaseItem);
-                    }}
-                    disabled={loading}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
+              return renderShowcaseRow(
+                item,
+                <Button
+                  size="icon"
+                  variant="destructive"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (showcaseItem) removeFromShowcase(showcaseItem);
+                  }}
+                  disabled={loading}
+                  aria-label="Remove from showcase"
+                >
+                  <X className="h-4 w-4" />
+                </Button>,
+                item.id
               );
             })}
           </div>
         )}
       </div>
-      
+
+      {/* Available Items Section */}
       {showcaseItems.length < MAX_SHOWCASE_ITEMS && (
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <Label className="text-lg font-medium">Available Library Items</Label>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
               onClick={() => navigate('/library')}
             >
               Go to Library
             </Button>
           </div>
-          
           {availableItems.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-3">
               {availableItems
                 .slice(0, 6)
-                .map(item => (
-                  <div key={item.id} className="relative group">
-                    <div onClick={() => navigate(`/details/${item.id}`)}>
-                      <MediaCard 
-                        item={item}
-                        delay={0}
-                      />
-                    </div>
+                .map(item =>
+                  renderShowcaseRow(
+                    item,
                     <Button
-                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
                       size="sm"
+                      variant="default"
                       onClick={() => addToShowcase(item)}
                       disabled={loading}
+                      aria-label="Add to showcase"
                     >
                       <Plus className="h-4 w-4 mr-1" />
                       Add
-                    </Button>
-                  </div>
-                ))
+                    </Button>,
+                    item.id
+                  )
+                )
               }
             </div>
           ) : (
             <div className="border border-dashed rounded-lg p-8 text-center">
               <p className="text-muted-foreground mb-4">No other items in your library</p>
-              <Button 
+              <Button
                 onClick={() => navigate('/add')}
                 variant="secondary"
               >
