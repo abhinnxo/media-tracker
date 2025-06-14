@@ -51,16 +51,26 @@ interface UserProfile {
 
 interface EnhancedListCardProps {
   list: CustomList;
+  itemCount?: number;
+  averageRating?: number;
+  onUpdateCover?: (listId: string, coverUrl: string | null) => Promise<void>;
+  onDelete?: (listId: string) => Promise<void>;
   onUpdate?: () => void;
   showAuthor?: boolean;
   variant?: "default" | "compact";
+  index?: number;
 }
 
 export const EnhancedListCard: React.FC<EnhancedListCardProps> = ({
   list,
+  itemCount = 0,
+  averageRating,
+  onUpdateCover,
+  onDelete,
   onUpdate,
   showAuthor = true,
   variant = "default",
+  index,
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -103,11 +113,15 @@ export const EnhancedListCard: React.FC<EnhancedListCardProps> = ({
 
     setIsLoading(true);
     try {
-      await listsService.deleteList(list.id);
-      toast({
-        title: "List deleted",
-        description: "Your list has been successfully deleted.",
-      });
+      if (onDelete) {
+        await onDelete(list.id);
+      } else {
+        await listsService.deleteList(list.id);
+        toast({
+          title: "List deleted",
+          description: "Your list has been successfully deleted.",
+        });
+      }
       onUpdate?.();
     } catch (error) {
       console.error("Error deleting list:", error);
@@ -186,7 +200,7 @@ export const EnhancedListCard: React.FC<EnhancedListCardProps> = ({
                   {getPrivacyIcon()}
                   <span className="ml-1">{getPrivacyText()}</span>
                 </Badge>
-                <span className="text-xs text-muted-foreground">0 items</span>
+                <span className="text-xs text-muted-foreground">{itemCount} items</span>
               </div>
             </div>
             {list.image_url && (
@@ -289,7 +303,7 @@ export const EnhancedListCard: React.FC<EnhancedListCardProps> = ({
           </div>
         )}
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>0 items</span>
+          <span>{itemCount} items</span>
           <span>{new Date(list.created_at).toLocaleDateString()}</span>
         </div>
       </CardContent>
