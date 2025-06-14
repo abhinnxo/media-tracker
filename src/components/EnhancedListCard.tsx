@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -183,33 +184,80 @@ export const EnhancedListCard: React.FC<EnhancedListCardProps> = ({
   if (variant === "compact") {
     return (
       <Card
-        className="cursor-pointer hover:shadow-md transition-shadow duration-200"
+        className="w-full cursor-pointer hover:shadow-md transition-shadow duration-200"
         onClick={handleView}
       >
-        <CardContent className="p-4">
-          <div className="flex items-start justify-between">
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-sm truncate">{list.name}</h3>
-              {list.description && (
-                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                  {list.description}
-                </p>
+        <CardContent className="p-0">
+          <div className="flex h-32">
+            {/* Image on the left */}
+            <div className="w-48 flex-shrink-0">
+              {list.image_url ? (
+                <img
+                  src={list.image_url}
+                  alt={list.name}
+                  className="w-full h-full object-cover rounded-l-lg"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 rounded-l-lg flex items-center justify-center">
+                  <Users className="h-8 w-8 text-primary/40" />
+                </div>
               )}
-              <div className="flex items-center gap-2 mt-2">
-                <Badge variant="secondary" className="text-xs">
-                  {getPrivacyIcon()}
-                  <span className="ml-1">{getPrivacyText()}</span>
-                </Badge>
-                <span className="text-xs text-muted-foreground">{itemCount} items</span>
+            </div>
+            
+            {/* Content on the right */}
+            <div className="flex-1 p-4 flex flex-col justify-between min-w-0">
+              <div>
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="font-semibold text-lg truncate pr-2">{list.name}</h3>
+                  {isOwner && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEdit(); }}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleShare(); }}>
+                          <Share2 className="mr-2 h-4 w-4" />
+                          Share
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={(e) => { e.stopPropagation(); handleDelete(); }}
+                          className="text-destructive"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </div>
+                
+                {list.description && (
+                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                    {list.description}
+                  </p>
+                )}
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Badge variant="secondary" className="text-xs">
+                    {getPrivacyIcon()}
+                    <span className="ml-1">{getPrivacyText()}</span>
+                  </Badge>
+                  <span className="text-sm text-muted-foreground">{itemCount} items</span>
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {new Date(list.created_at).toLocaleDateString()}
+                </span>
               </div>
             </div>
-            {list.image_url && (
-              <img
-                src={list.image_url}
-                alt={list.name}
-                className="w-12 h-12 rounded object-cover ml-3 flex-shrink-0"
-              />
-            )}
           </div>
         </CardContent>
       </Card>
