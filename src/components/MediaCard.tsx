@@ -3,11 +3,12 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { MediaItem, MediaCategory } from '@/lib/types';
 import { StatusBadge } from './StatusBadge';
-import { Book, Film, Tv, Star, ImageOff, Crown } from 'lucide-react';
+import { Book, Film, Tv, Star, ImageOff, Crown, Play } from 'lucide-react';
 import { AnimatedTransition } from './AnimatedTransition';
 import { cn } from '@/lib/utils';
 import { MediaCardMenu } from './MediaCardMenu';
 import { Badge } from './ui/badge';
+import { Progress } from './ui/progress';
 
 interface MediaCardProps {
   item: MediaItem;
@@ -90,6 +91,34 @@ export const MediaCard: React.FC<MediaCardProps> = ({
     return 'can-add';
   };
 
+  // TV Show progress info
+  const isShowWithProgress = (item.category === MediaCategory.TV_SERIES || item.category === MediaCategory.ANIME) 
+    && (item.current_season || item.current_episode || item.overall_progress_percentage);
+
+  const ProgressInfo = () => {
+    if (!isShowWithProgress) return null;
+
+    return (
+      <div className="space-y-1">
+        {item.current_season && item.current_episode && (
+          <div className="flex items-center text-xs text-muted-foreground">
+            <Play className="w-3 h-3 mr-1" />
+            S{item.current_season}E{item.current_episode}
+          </div>
+        )}
+        {item.overall_progress_percentage !== null && item.overall_progress_percentage > 0 && (
+          <div className="space-y-1">
+            <div className="flex justify-between text-xs">
+              <span>Progress</span>
+              <span>{item.overall_progress_percentage}%</span>
+            </div>
+            <Progress value={item.overall_progress_percentage} className="h-1" />
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (variant === 'list') {
     return (
       <AnimatedTransition
@@ -139,6 +168,7 @@ export const MediaCard: React.FC<MediaCardProps> = ({
                     <span>{item.rating}/10</span>
                   </div>
                 )}
+                <ProgressInfo />
                 {item.description && (
                   <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
                     {item.description}
@@ -266,11 +296,12 @@ export const MediaCard: React.FC<MediaCardProps> = ({
                 </span>
               </div>
               {item.rating !== null && (
-                <div className="flex items-center text-amber-500 text-xs">
+                <div className="flex items-center text-amber-500 text-xs mb-2">
                   <Star size={12} className="mr-0.5 fill-amber-500" />
                   <span>{item.rating}/10</span>
                 </div>
               )}
+              <ProgressInfo />
             </div>
             {item.tags && item.tags.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-1">

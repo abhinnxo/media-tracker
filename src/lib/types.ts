@@ -1,3 +1,4 @@
+
 export enum MediaCategory {
   MOVIE = "movie",
   TV_SERIES = "tv-series",
@@ -12,6 +13,28 @@ export enum MediaStatus {
   COMPLETED = "completed",
   DROPPED = "dropped",
   ON_HOLD = "on-hold"
+}
+
+export enum SeasonStatus {
+  NOT_STARTED = "not-started",
+  WATCHING = "watching", 
+  COMPLETED = "completed",
+  ON_HOLD = "on-hold"
+}
+
+export interface Season {
+  id: string;
+  media_id: string;
+  season_number: number;
+  total_episodes: number;
+  watched_episodes: number;
+  status: SeasonStatus;
+  rating: number | null;
+  start_date: string | null;
+  completion_date: string | null;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
 }
 
 export interface MediaItem {
@@ -32,6 +55,10 @@ export interface MediaItem {
   year?: string;
   creator?: string;
   genres?: string[];
+  total_seasons?: number | null;
+  current_season?: number | null;
+  current_episode?: number | null;
+  overall_progress_percentage?: number | null;
 }
 
 export interface MediaFilterOptions {

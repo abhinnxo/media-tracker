@@ -121,48 +121,60 @@ export type Database = {
         Row: {
           category: string
           created_at: string
+          current_episode: number | null
+          current_season: number | null
           description: string | null
           end_date: string | null
           id: string
           image_url: string | null
           notes: string | null
+          overall_progress_percentage: number | null
           rating: number | null
           start_date: string | null
           status: string
           tags: string[] | null
           title: string
+          total_seasons: number | null
           updated_at: string
           user_id: string
         }
         Insert: {
           category: string
           created_at?: string
+          current_episode?: number | null
+          current_season?: number | null
           description?: string | null
           end_date?: string | null
           id?: string
           image_url?: string | null
           notes?: string | null
+          overall_progress_percentage?: number | null
           rating?: number | null
           start_date?: string | null
           status: string
           tags?: string[] | null
           title: string
+          total_seasons?: number | null
           updated_at?: string
           user_id: string
         }
         Update: {
           category?: string
           created_at?: string
+          current_episode?: number | null
+          current_season?: number | null
           description?: string | null
           end_date?: string | null
           id?: string
           image_url?: string | null
           notes?: string | null
+          overall_progress_percentage?: number | null
           rating?: number | null
           start_date?: string | null
           status?: string
           tags?: string[] | null
           title?: string
+          total_seasons?: number | null
           updated_at?: string
           user_id?: string
         }
@@ -320,6 +332,59 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
+      }
+      seasons: {
+        Row: {
+          completion_date: string | null
+          created_at: string
+          id: string
+          media_id: string
+          rating: number | null
+          season_number: number
+          start_date: string | null
+          status: string
+          total_episodes: number
+          updated_at: string
+          user_id: string
+          watched_episodes: number
+        }
+        Insert: {
+          completion_date?: string | null
+          created_at?: string
+          id?: string
+          media_id: string
+          rating?: number | null
+          season_number: number
+          start_date?: string | null
+          status?: string
+          total_episodes?: number
+          updated_at?: string
+          user_id: string
+          watched_episodes?: number
+        }
+        Update: {
+          completion_date?: string | null
+          created_at?: string
+          id?: string
+          media_id?: string
+          rating?: number | null
+          season_number?: number
+          start_date?: string | null
+          status?: string
+          total_episodes?: number
+          updated_at?: string
+          user_id?: string
+          watched_episodes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seasons_media_id_fkey"
+            columns: ["media_id"]
+            isOneToOne: false
+            referencedRelation: "media_items"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

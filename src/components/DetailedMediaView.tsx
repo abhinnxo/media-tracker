@@ -1,233 +1,254 @@
-import React, { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle, 
-  CardDescription, 
-  CardFooter 
-} from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { ExternalLink, BookmarkPlus, Star, Youtube, Users, MapPin } from 'lucide-react';
-import { MediaCategory } from '@/lib/types';
-import { MediaSearchResult } from '@/lib/api';
-import { mediaDetailsApi } from '@/lib/api/mediaDetails';
+
+import React, { useState, useEffect } from "react";
+import { MediaItem, MediaCategory, MediaStatus } from "@/lib/types";
+import { StatusBadge } from "./StatusBadge";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CalendarDays, Clock, Edit, Star, Tag, User, Tv } from "lucide-react";
+import { Link } from "react-router-dom";
+import { SeasonManagement } from "./SeasonManagement";
 
 interface DetailedMediaViewProps {
-  media: MediaSearchResult;
+  item: MediaItem;
 }
 
-export const DetailedMediaView: React.FC<DetailedMediaViewProps> = ({ media }) => {
-  const [details, setDetails] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  
-  useEffect(() => {
-    const fetchDetails = async () => {
-      setLoading(true);
-      try {
-        const detailedInfo = await mediaDetailsApi.getDetails(media.id, media.category);
-        setDetails(detailedInfo);
-      } catch (error) {
-        console.error('Error fetching detailed media info:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchDetails();
-  }, [media.id, media.category]);
-  
-  const getCategoryLabel = (category: MediaCategory) => {
-    switch (category) {
-      case MediaCategory.MOVIE:
-        return 'Movie';
-      case MediaCategory.TV_SERIES:
-        return 'TV Series';
-      case MediaCategory.ANIME:
-        return 'Anime';
-      case MediaCategory.MANGA:
-        return 'Manga';
-      case MediaCategory.BOOK:
-        return 'Book';
-      default:
-        return 'Media';
-    }
+export const DetailedMediaView: React.FC<DetailedMediaViewProps> = ({ item }) => {
+  const [imageError, setImageError] = useState(false);
+
+  const handleImageError = () => {
+    setImageError(true);
   };
-  
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "Not set";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  const categoryLabels = {
+    [MediaCategory.MOVIE]: "Movie",
+    [MediaCategory.TV_SERIES]: "TV Series",
+    [MediaCategory.ANIME]: "Anime",
+    [MediaCategory.BOOK]: "Book",
+    [MediaCategory.MANGA]: "Manga",
+  };
+
+  const CategoryIcon = {
+    [MediaCategory.MOVIE]: "🎬",
+    [MediaCategory.TV_SERIES]: "📺",
+    [MediaCategory.ANIME]: "🎌",
+    [MediaCategory.BOOK]: "📚",
+    [MediaCategory.MANGA]: "📖",
+  }[item.category];
+
+  const isShowCategory = item.category === MediaCategory.TV_SERIES || item.category === MediaCategory.ANIME;
+
   return (
-    <Card className="w-full overflow-hidden border-border">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Media Poster/Cover */}
-        <div className="md:col-span-1 p-6">
-          <div className="aspect-[2/3] rounded-md overflow-hidden bg-muted">
-            {media.imageUrl ? (
-              <img 
-                src={media.imageUrl} 
-                alt={`${media.title} cover`}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = 'https://placehold.co/400x600?text=No+Image';
-                }}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground">
-                No image available
+    <div className="max-w-6xl mx-auto p-6 space-y-8">
+      {/* Header Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Image */}
+        <div className="lg:col-span-1">
+          <div className="aspect-[2/3] relative overflow-hidden rounded-lg bg-muted">
+            {!item.image_url || imageError ? (
+              <div className="w-full h-full flex items-center justify-center text-6xl">
+                {CategoryIcon}
               </div>
+            ) : (
+              <img
+                src={item.image_url}
+                alt={item.title}
+                className="w-full h-full object-cover"
+                onError={handleImageError}
+                crossOrigin="anonymous"
+              />
             )}
-          </div>
-          <div className="mt-4 space-y-3">
-            <Button variant="outline" className="w-full">
-              <BookmarkPlus className="mr-2 h-4 w-4" />
-              Add to Library
-            </Button>
-            <Button variant="outline" className="w-full">
-              <Star className="mr-2 h-4 w-4" />
-              Rate & Review
-            </Button>
           </div>
         </div>
-        
-        {/* Media Details */}
-        <div className="md:col-span-2 p-6 pt-0 md:pt-6">
-          <CardHeader className="px-0">
-            <div className="flex flex-wrap gap-2 mb-2">
-              <Badge>{getCategoryLabel(media.category)}</Badge>
-              {media.year && <Badge variant="outline">{media.year}</Badge>}
-              {media.episodeCount && (
-                <Badge variant="outline">{media.episodeCount} Episodes</Badge>
-              )}
+
+        {/* Details */}
+        <div className="lg:col-span-2 space-y-6">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="outline">{categoryLabels[item.category]}</Badge>
+              <StatusBadge status={item.status} />
             </div>
-            
-            <CardTitle className="text-2xl md:text-3xl">{media.title}</CardTitle>
-            
-            {media.creator && (
-              <CardDescription className="text-base">
-                {media.category === MediaCategory.BOOK || media.category === MediaCategory.MANGA 
-                  ? `By ${media.creator}` 
-                  : `Directed by ${media.creator}`}
-              </CardDescription>
+            <h1 className="text-4xl font-bold mb-4">{item.title}</h1>
+            {item.description && (
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                {item.description}
+              </p>
             )}
-          </CardHeader>
-          
-          <CardContent className="px-0">
-            <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="mb-4">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                {(media.category === MediaCategory.MOVIE || media.category === MediaCategory.TV_SERIES) && (
-                  <TabsTrigger value="cast">Cast & Crew</TabsTrigger>
-                )}
-                {details?.trailer && (
-                  <TabsTrigger value="trailer">Trailer</TabsTrigger>
-                )}
-              </TabsList>
-              
-              <TabsContent value="overview" className="mt-0">
-                <div className="space-y-4">
-                  {media.genres && media.genres.length > 0 && (
-                    <div>
-                      <h3 className="text-sm font-medium mb-2">Genres</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {media.genres.map((genre, index) => (
-                          <Badge key={index} variant="secondary">
-                            {genre}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div>
-                    <h3 className="text-sm font-medium mb-2">Synopsis</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {media.description || 'No description available.'}
-                    </p>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {item.rating && (
+              <Card>
+                <CardContent className="p-3 text-center">
+                  <div className="flex items-center justify-center text-amber-500 mb-1">
+                    <Star className="w-4 h-4 fill-current mr-1" />
+                    <span className="font-semibold">{item.rating}</span>
                   </div>
-                  
-                  {details?.rating && (
-                    <div>
-                      <h3 className="text-sm font-medium mb-2">Rating</h3>
-                      <div className="flex items-center">
-                        <Star className="h-5 w-5 text-yellow-500 mr-2" />
-                        <span>{details.rating}</span>
-                        {details.voteCount && (
-                          <span className="text-sm text-muted-foreground ml-2">
-                            ({details.voteCount} votes)
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </TabsContent>
-              
-              {(media.category === MediaCategory.MOVIE || media.category === MediaCategory.TV_SERIES) && (
-                <TabsContent value="cast" className="mt-0">
-                  {loading ? (
-                    <div className="h-40 flex items-center justify-center">
-                      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                    </div>
-                  ) : details?.cast ? (
-                    <div className="space-y-6">
-                      <div>
-                        <h3 className="text-sm font-medium mb-4">Cast</h3>
-                        <ScrollArea className="h-[200px]">
-                          <div className="space-y-3">
-                            {details.cast.map((person: any, index: number) => (
-                              <div key={index} className="flex justify-between items-center py-2">
-                                <span className="font-medium">{person.name}</span>
-                                <span className="text-muted-foreground">{person.character}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </ScrollArea>
-                      </div>
-                      
-                      {details.crew && (
-                        <div>
-                          <h3 className="text-sm font-medium mb-4">Crew</h3>
-                          <ScrollArea className="h-[200px]">
-                            <div className="space-y-3">
-                              {details.crew.map((person: any, index: number) => (
-                                <div key={index} className="flex justify-between items-center py-2">
-                                  <span className="font-medium">{person.name}</span>
-                                  <span className="text-muted-foreground">{person.job}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </ScrollArea>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <Users className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-                      <p>No cast information available</p>
-                    </div>
-                  )}
-                </TabsContent>
-              )}
-              
-              {details?.trailer && (
-                <TabsContent value="trailer" className="mt-0">
-                  <div className="aspect-video rounded-md overflow-hidden bg-black">
-                    <iframe
-                      src={`https://www.youtube.com/embed/${details.trailer}`}
-                      title={`${media.title} trailer`}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      className="w-full h-full"
-                    ></iframe>
-                  </div>
-                </TabsContent>
-              )}
-            </Tabs>
-          </CardContent>
+                  <p className="text-xs text-muted-foreground">Rating</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {item.year && (
+              <Card>
+                <CardContent className="p-3 text-center">
+                  <div className="font-semibold mb-1">{item.year}</div>
+                  <p className="text-xs text-muted-foreground">Year</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {isShowCategory && item.total_seasons && (
+              <Card>
+                <CardContent className="p-3 text-center">
+                  <div className="font-semibold mb-1">{item.total_seasons}</div>
+                  <p className="text-xs text-muted-foreground">Seasons</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {isShowCategory && item.overall_progress_percentage !== null && (
+              <Card>
+                <CardContent className="p-3 text-center">
+                  <div className="font-semibold mb-1">{item.overall_progress_percentage}%</div>
+                  <p className="text-xs text-muted-foreground">Complete</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            <Button asChild>
+              <Link to={`/edit/${item.id}`}>
+                <Edit className="w-4 h-4 mr-2" />
+                Edit
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
-    </Card>
+
+      {/* Tabbed Content */}
+      <Tabs defaultValue={isShowCategory ? "seasons" : "details"} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          {isShowCategory && (
+            <TabsTrigger value="seasons" className="flex items-center gap-2">
+              <Tv className="w-4 h-4" />
+              Seasons & Progress
+            </TabsTrigger>
+          )}
+          <TabsTrigger value="details">Details & Info</TabsTrigger>
+        </TabsList>
+
+        {isShowCategory && (
+          <TabsContent value="seasons" className="mt-6">
+            <SeasonManagement mediaItem={item} />
+          </TabsContent>
+        )}
+
+        <TabsContent value="details" className="mt-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Metadata */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {item.creator && (
+                  <div className="flex items-center gap-3">
+                    <User className="w-4 h-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Creator</p>
+                      <p className="font-medium">{item.creator}</p>
+                    </div>
+                  </div>
+                )}
+
+                <Separator />
+
+                <div className="flex items-center gap-3">
+                  <CalendarDays className="w-4 h-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Start Date</p>
+                    <p className="font-medium">{formatDate(item.start_date)}</p>
+                  </div>
+                </div>
+
+                {item.end_date && (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <CalendarDays className="w-4 h-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">End Date</p>
+                        <p className="font-medium">{formatDate(item.end_date)}</p>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                <div className="flex items-center gap-3">
+                  <Clock className="w-4 h-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Added</p>
+                    <p className="font-medium">{formatDate(item.created_at)}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Tags and Notes */}
+            <div className="space-y-6">
+              {/* Tags */}
+              {item.tags && item.tags.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Tag className="w-4 h-4" />
+                      Tags
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      {item.tags.map((tag) => (
+                        <Badge key={tag} variant="secondary">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Notes */}
+              {item.notes && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Notes</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground whitespace-pre-wrap">
+                      {item.notes}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };

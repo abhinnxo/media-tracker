@@ -1,4 +1,3 @@
-
 import { supabase } from './supabase';
 import { MediaItem, MediaCategory, MediaStatus, MediaFilterOptions } from './types';
 
@@ -18,7 +17,11 @@ const convertDbToAppItem = (dbItem: any): MediaItem => {
     notes: dbItem.notes || null,
     created_at: dbItem.created_at,
     updated_at: dbItem.updated_at,
-    user_id: dbItem.user_id
+    user_id: dbItem.user_id,
+    total_seasons: dbItem.total_seasons || null,
+    current_season: dbItem.current_season || null,
+    current_episode: dbItem.current_episode || null,
+    overall_progress_percentage: dbItem.overall_progress_percentage || null
   };
 };
 
@@ -38,7 +41,11 @@ const convertAppToDbItem = (item: MediaItem, userId: string): any => {
     notes: item.notes || null,
     created_at: item.created_at,
     updated_at: new Date().toISOString(),
-    user_id: userId
+    user_id: userId,
+    total_seasons: item.total_seasons || null,
+    current_season: item.current_season || null,
+    current_episode: item.current_episode || null,
+    overall_progress_percentage: item.overall_progress_percentage || null
   };
 };
 
@@ -270,5 +277,38 @@ export const supabaseStore = {
       console.error('Error removing item from showcase:', error);
       throw new Error('Failed to remove item from showcase');
     }
+  },
+  
+  // Update TV show progress
+  async updateShowProgress(
+    mediaId: string, 
+    userId: string,
+    progressData: {
+      currentSeason?: number;
+      currentEpisode?: number;
+      overallProgressPercentage?: number;
+      totalSeasons?: number;
+    }
+  ): Promise<MediaItem> {
+    const { data, error } = await supabase
+      .from('media_items')
+      .update({
+        current_season: progressData.currentSeason,
+        current_episode: progressData.currentEpisode,
+        overall_progress_percentage: progressData.overallProgressPercentage,
+        total_seasons: progressData.totalSeasons,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', mediaId)
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating show progress:', error);
+      throw new Error('Failed to update show progress');
+    }
+
+    return convertDbToAppItem(data);
   }
 };
