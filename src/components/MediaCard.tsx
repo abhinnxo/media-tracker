@@ -94,19 +94,20 @@ export const MediaCard: React.FC<MediaCardProps> = ({
                     <span>{categoryLabels[item.category]}</span>
                   </div>
 
-                  <h3 className="font-medium text-lg leading-tight mb-2 line-clamp-2" title={item.title}>
+                  <h3 className="font-medium text-lg leading-tight mb-1 line-clamp-2" title={item.title}>
                     {item.title}
                   </h3>
 
                   {item.rating !== null && (
-                    <div className="flex items-center text-amber-500 text-sm mb-2">
+                    <div className="flex items-center text-amber-500 text-sm mb-1">
                       <Star size={14} className="mr-1 fill-amber-500" />
                       <span>{item.rating}/10</span>
                     </div>
                   )}
 
+                  {/* Always show description in list view */}
                   {item.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
                       {item.description}
                     </p>
                   )}
