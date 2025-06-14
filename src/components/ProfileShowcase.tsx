@@ -1,11 +1,13 @@
+
 import React, { useState, useEffect } from 'react';
 import { useProfileStore } from '@/lib/profile';
 import { MediaItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { MediaCard } from '@/components/MediaCard';
 import { toast } from '@/hooks/use-toast';
-import { Plus, X } from 'lucide-react';
+import { Plus, Crown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { mediaStore } from '@/lib/store';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,7 +15,7 @@ import { profileService, ShowcaseItem } from '@/lib/profile-service';
 import { ShowcaseList } from "./ProfileShowcase/ShowcaseList";
 import { AvailableLibraryList } from "./ProfileShowcase/AvailableLibraryList";
 
-const MAX_SHOWCASE_ITEMS = 5;
+const MAX_SHOWCASE_ITEMS = 3;
 
 export const ProfileShowcase = () => {
   const profile = useProfileStore(state => state.profile);
@@ -51,7 +53,7 @@ export const ProfileShowcase = () => {
     if (showcaseItems.length >= MAX_SHOWCASE_ITEMS) {
       toast({
         title: "Showcase full",
-        description: `You can only showcase up to ${MAX_SHOWCASE_ITEMS} items`,
+        description: `You can only showcase up to ${MAX_SHOWCASE_ITEMS} items. Remove an item first.`,
         variant: "destructive"
       });
       return;
@@ -130,7 +132,13 @@ export const ProfileShowcase = () => {
     <div className="space-y-8">
       {/* Showcase Items Section */}
       <div>
-        <Label className="text-lg font-medium">Showcase Items</Label>
+        <div className="flex items-center gap-3 mb-2">
+          <Label className="text-lg font-medium">Showcase Items</Label>
+          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+            <Crown size={12} className="mr-1" />
+            {showcaseItems.length}/{MAX_SHOWCASE_ITEMS}
+          </Badge>
+        </div>
         <p className="text-sm text-muted-foreground mb-4">
           Display your favorite media (max {MAX_SHOWCASE_ITEMS} items)
         </p>

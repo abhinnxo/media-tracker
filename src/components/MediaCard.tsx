@@ -1,11 +1,13 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { MediaItem, MediaCategory } from '@/lib/types';
 import { StatusBadge } from './StatusBadge';
-import { Book, Film, Tv, Star, ImageOff } from 'lucide-react';
+import { Book, Film, Tv, Star, ImageOff, Crown } from 'lucide-react';
 import { AnimatedTransition } from './AnimatedTransition';
 import { cn } from '@/lib/utils';
 import { MediaCardMenu } from './MediaCardMenu';
+import { Badge } from './ui/badge';
 
 interface MediaCardProps {
   item: MediaItem;
@@ -15,6 +17,9 @@ interface MediaCardProps {
   onEdit?: () => void;
   onDelete?: () => void;
   canAddToShowcase?: boolean;
+  isInShowcase?: boolean;
+  showcaseCount?: number;
+  maxShowcaseItems?: number;
 }
 
 export const MediaCard: React.FC<MediaCardProps> = ({ 
@@ -24,7 +29,10 @@ export const MediaCard: React.FC<MediaCardProps> = ({
   onAddToShowcase,
   onEdit,
   onDelete,
-  canAddToShowcase,
+  canAddToShowcase = true,
+  isInShowcase = false,
+  showcaseCount = 0,
+  maxShowcaseItems = 3,
 }) => {
   const [imageError, setImageError] = useState(false);
   const navigate = useNavigate();
@@ -38,7 +46,6 @@ export const MediaCard: React.FC<MediaCardProps> = ({
     [MediaCategory.MANGA]: Book,
   }[item.category];
 
-  // Category labels
   const categoryLabels = {
     [MediaCategory.MOVIE]: 'Movie',
     [MediaCategory.TV_SERIES]: 'TV Series',
@@ -73,9 +80,17 @@ export const MediaCard: React.FC<MediaCardProps> = ({
   };
 
   const cardLink = `/details/${item.id}`;
+  const isShowcaseFull = showcaseCount >= maxShowcaseItems;
+  const showDisabledAdd = !isInShowcase && isShowcaseFull;
+
+  // Determine showcase button state
+  const getShowcaseButtonState = () => {
+    if (isInShowcase) return 'in-showcase';
+    if (isShowcaseFull) return 'showcase-full';
+    return 'can-add';
+  };
 
   if (variant === 'list') {
-    // List variant: Card is clickable except for the menu (stop bubbling there)
     return (
       <AnimatedTransition
         variant="slideUp"
@@ -88,8 +103,10 @@ export const MediaCard: React.FC<MediaCardProps> = ({
           tabIndex={-1}
           style={{ textDecoration: 'none' }}
         >
-          <div className="bg-card rounded-xl overflow-hidden border border-border hover:border-primary/30 hover:shadow-md transition-all-200 flex h-32">
-            {/* Left: image */}
+          <div className={cn(
+            "bg-card rounded-xl overflow-hidden border border-border hover:border-primary/30 hover:shadow-md transition-all-200 flex h-32",
+            isInShowcase && "ring-2 ring-amber-400/50 border-amber-400/50"
+          )}>
             <div className="w-32 flex-shrink-0 relative overflow-hidden bg-muted">
               <ImageComponent 
                 className="w-full h-full object-cover"
@@ -98,8 +115,15 @@ export const MediaCard: React.FC<MediaCardProps> = ({
               <div className="absolute top-2 right-2">
                 <StatusBadge status={item.status} size="sm" showText={false} />
               </div>
+              {isInShowcase && (
+                <div className="absolute top-2 left-2">
+                  <Badge variant="default" className="bg-amber-500 text-amber-50 text-xs px-1.5 py-0.5">
+                    <Crown size={10} className="mr-1" />
+                    Showcase
+                  </Badge>
+                </div>
+              )}
             </div>
-            {/* Right: info */}
             <div className="flex-1 p-4 flex flex-col justify-between min-w-0">
               <div className="flex-1">
                 <div className="flex items-center text-xs text-muted-foreground mb-1">
@@ -146,13 +170,15 @@ export const MediaCard: React.FC<MediaCardProps> = ({
                     {item.creator}
                   </p>
                 )}
-                {/* 3-dots menu: prevent link click when clicking menu */}
                 <span onClick={e => e.stopPropagation()}>
                   <MediaCardMenu 
                     onAddToShowcase={onAddToShowcase}
                     onEdit={onEdit}
                     onDelete={onDelete}
-                    canAddToShowcase={canAddToShowcase}
+                    canAddToShowcase={canAddToShowcase && !showDisabledAdd}
+                    showcaseButtonState={getShowcaseButtonState()}
+                    showcaseCount={showcaseCount}
+                    maxShowcaseItems={maxShowcaseItems}
                   />
                 </span>
               </div>
@@ -163,7 +189,7 @@ export const MediaCard: React.FC<MediaCardProps> = ({
     );
   }
 
-  // Grid variant: Card is clickable except for menu; menu is on bottom right near title
+  // Grid variant
   return (
     <AnimatedTransition
       variant="slideUp"
@@ -176,7 +202,10 @@ export const MediaCard: React.FC<MediaCardProps> = ({
         tabIndex={-1}
         style={{ textDecoration: "none" }}
       >
-        <div className="bg-card rounded-xl overflow-hidden h-full border border-border hover:border-primary/30 hover:shadow-md transition-all-200 flex flex-col">
+        <div className={cn(
+          "bg-card rounded-xl overflow-hidden h-full border border-border hover:border-primary/30 hover:shadow-md transition-all-200 flex flex-col",
+          isInShowcase && "ring-2 ring-amber-400/50 border-amber-400/50"
+        )}>
           <div className="aspect-[2/3] relative overflow-hidden bg-muted">
             <ImageComponent 
               className="w-full h-full object-cover transition-transform-300 group-hover:scale-105"
@@ -185,7 +214,14 @@ export const MediaCard: React.FC<MediaCardProps> = ({
             <div className="absolute top-2 right-2 z-10">
               <StatusBadge status={item.status} size="sm" showText={false} />
             </div>
-            {/* Details overlay (still on the image) */}
+            {isInShowcase && (
+              <div className="absolute top-2 left-2 z-10">
+                <Badge variant="default" className="bg-amber-500 text-amber-50 text-xs px-1.5 py-0.5">
+                  <Crown size={10} className="mr-1" />
+                  Showcase
+                </Badge>
+              </div>
+            )}
             <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity p-4 overflow-y-auto">
               <div className="text-white space-y-2">
                 {item.description && (
@@ -211,7 +247,6 @@ export const MediaCard: React.FC<MediaCardProps> = ({
                 <h3 className="font-medium leading-tight truncate" title={item.title}>
                   {item.title}
                 </h3>
-                {/* Move 3-dots to bottom right, prevent click bubbling */}
                 <span
                   className="ml-2 z-10"
                   onClick={e => {
@@ -223,7 +258,10 @@ export const MediaCard: React.FC<MediaCardProps> = ({
                     onAddToShowcase={onAddToShowcase}
                     onEdit={onEdit}
                     onDelete={onDelete}
-                    canAddToShowcase={canAddToShowcase}
+                    canAddToShowcase={canAddToShowcase && !showDisabledAdd}
+                    showcaseButtonState={getShowcaseButtonState()}
+                    showcaseCount={showcaseCount}
+                    maxShowcaseItems={maxShowcaseItems}
                   />
                 </span>
               </div>

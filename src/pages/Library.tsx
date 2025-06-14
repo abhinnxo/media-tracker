@@ -12,7 +12,8 @@ import { EmptyState } from "@/components/EmptyState";
 import { AnimatedTransition } from "@/components/AnimatedTransition";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LayoutGrid, LayoutList, Plus, Search } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { LayoutGrid, LayoutList, Plus, Search, Crown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -25,11 +26,16 @@ import {
 import { MediaDeleteDialog } from "@/components/MediaDeleteDialog";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { profileService, ShowcaseItem } from "@/lib/profile-service";
+
+const MAX_SHOWCASE_ITEMS = 3;
 
 const Library: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [filteredItems, setFilteredItems] = useState<MediaItem[]>([]);
+  const [showcaseItems, setShowcaseItems] = useState<ShowcaseItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedCategory, setSelectedCategory] = useState<
@@ -41,13 +47,23 @@ const Library: React.FC = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<MediaItem | null>(null);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
-        const items = await mediaStore.getAll();
+        const [items, showcase] = await Promise.all([
+          mediaStore.getAll(),
+          profileService.getShowcaseItems(user.id)
+        ]);
         setMediaItems(items);
         setFilteredItems(items);
+        setShowcaseItems(showcase);
       } catch (error) {
         console.error("Error fetching media items:", error);
       } finally {
@@ -56,7 +72,7 @@ const Library: React.FC = () => {
     };
 
     fetchData();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     let filtered = [...mediaItems];
@@ -81,12 +97,68 @@ const Library: React.FC = () => {
     setFilteredItems(filtered);
   }, [mediaItems, searchQuery, selectedCategory, selectedStatus]);
 
-  // Add to Showcase handler (stub, override in ProfileShowcase as needed)
-  const handleAddToShowcase = (item: MediaItem) => {
-    toast({
-      title: "Not implemented",
-      description: "Add to showcase coming soon.",
-    });
+  // Handle showcase operations
+  const handleAddToShowcase = async (item: MediaItem) => {
+    if (!user) return;
+
+    const isInShowcase = showcaseItems.some(s => s.item_id === item.id);
+    
+    if (isInShowcase) {
+      // Remove from showcase
+      const showcaseItem = showcaseItems.find(s => s.item_id === item.id);
+      if (showcaseItem) {
+        try {
+          const success = await profileService.removeFromShowcase(showcaseItem.id);
+          if (success) {
+            setShowcaseItems(prev => prev.filter(s => s.id !== showcaseItem.id));
+            toast({
+              title: "Removed from showcase",
+              description: `"${item.title}" was removed from your showcase.`,
+            });
+          }
+        } catch (error) {
+          toast({
+            title: "Error",
+            description: "Failed to remove item from showcase.",
+            variant: "destructive",
+          });
+        }
+      }
+    } else {
+      // Add to showcase
+      if (showcaseItems.length >= MAX_SHOWCASE_ITEMS) {
+        toast({
+          title: "Showcase full",
+          description: `You can only showcase up to ${MAX_SHOWCASE_ITEMS} items. Remove an item first.`,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      try {
+        const newShowcaseItem = await profileService.addToShowcase(
+          user.id,
+          item.category,
+          item.id,
+          item.title,
+          item.image_url
+        );
+
+        if (newShowcaseItem) {
+          setShowcaseItems(prev => [...prev, newShowcaseItem]);
+          toast({
+            title: "Added to showcase",
+            description: `"${item.title}" was added to your showcase.`,
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to add item to showcase.",
+          variant: "destructive",
+        });
+      }
+    }
   };
 
   // Edit handler
@@ -106,6 +178,14 @@ const Library: React.FC = () => {
     setIsLoading(true);
     try {
       await mediaStore.delete(itemToDelete.id);
+      
+      // Also remove from showcase if it's there
+      const showcaseItem = showcaseItems.find(s => s.item_id === itemToDelete.id);
+      if (showcaseItem && user) {
+        await profileService.removeFromShowcase(showcaseItem.id);
+        setShowcaseItems(prev => prev.filter(s => s.id !== showcaseItem.id));
+      }
+      
       setMediaItems(prev => prev.filter(i => i.id !== itemToDelete.id));
       setFilteredItems(prev => prev.filter(i => i.id !== itemToDelete.id));
       toast({
@@ -144,9 +224,17 @@ const Library: React.FC = () => {
         >
           <div className="contents items-center justify-between gap-3">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-semibold mb-0 sm:mb-1">
-                Your Library
-              </h1>
+              <div className="flex items-center gap-3 mb-1">
+                <h1 className="text-2xl sm:text-3xl font-semibold">
+                  Your Library
+                </h1>
+                {showcaseItems.length > 0 && (
+                  <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                    <Crown size={12} className="mr-1" />
+                    Showcase: {showcaseItems.length}/{MAX_SHOWCASE_ITEMS}
+                  </Badge>
+                )}
+              </div>
               <p className="text-sm sm:text-base text-muted-foreground">
                 {mediaItems.length} {mediaItems.length === 1 ? "item" : "items"}{" "}
                 in your collection
@@ -295,6 +383,9 @@ const Library: React.FC = () => {
                 onEdit={() => handleEdit(item)}
                 onDelete={() => handleDelete(item)}
                 canAddToShowcase={true}
+                isInShowcase={showcaseItems.some(s => s.item_id === item.id)}
+                showcaseCount={showcaseItems.length}
+                maxShowcaseItems={MAX_SHOWCASE_ITEMS}
               />
             ))}
             <MediaDeleteDialog
