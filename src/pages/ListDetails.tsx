@@ -43,7 +43,9 @@ import {
   Plus,
   Users,
   Calendar,
-  Tag
+  Tag,
+  Grid,
+  List
 } from 'lucide-react';
 import { AnimatedTransition } from '@/components/AnimatedTransition';
 
@@ -68,6 +70,7 @@ const ListDetails = () => {
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   useEffect(() => {
     if (!id) return;
@@ -342,22 +345,34 @@ const ListDetails = () => {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Items ({items.length})</CardTitle>
-                {isOwner && (
-                  <Button onClick={() => setIsAddModalOpen(true)}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Items
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+                  >
+                    {viewMode === 'grid' ? <List className="h-4 w-4" /> : <Grid className="h-4 w-4" />}
                   </Button>
-                )}
+                  {isOwner && (
+                    <Button onClick={() => setIsAddModalOpen(true)}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Items
+                    </Button>
+                  )}
+                </div>
               </div>
             </CardHeader>
             <CardContent>
               {items.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className={
+                  viewMode === 'grid' 
+                    ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+                    : 'grid grid-cols-1 md:grid-cols-2 gap-4'
+                }>
                   {items.map((item) => (
                     <MediaCard
                       key={item.id}
                       item={item}
-                      onRemove={() => handleRemoveItem(item.id)}
                     />
                   ))}
                 </div>

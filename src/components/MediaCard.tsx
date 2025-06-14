@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MediaItem, MediaCategory } from '@/lib/types';
@@ -75,56 +74,71 @@ export const MediaCard: React.FC<MediaCardProps> = ({
           className="block"
         >
           <div className="bg-card rounded-xl overflow-hidden border border-border hover:border-primary/30 hover:shadow-md transition-all-200">
-            <div className="flex p-4 gap-4">
-              <div className="w-[100px] aspect-[2/3] relative overflow-hidden bg-muted rounded-md flex-shrink-0">
+            <div className="flex h-32">
+              {/* Left side - Media thumbnail (30-40% width) */}
+              <div className="w-32 flex-shrink-0 relative overflow-hidden bg-muted">
                 <ImageComponent 
                   className="w-full h-full object-cover"
                   size={32}
                 />
+                <div className="absolute top-2 right-2">
+                  <StatusBadge status={item.status} size="sm" showText={false} />
+                </div>
               </div>
 
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center text-xs text-muted-foreground mb-1">
-                  <CategoryIcon size={12} className="mr-1" />
-                  <span>{categoryLabels[item.category]}</span>
-                </div>
-
-                <h3 className="font-medium text-lg leading-tight mb-2">{item.title}</h3>
-
-                <StatusBadge status={item.status} size="sm" className="mb-2" />
-
-                {item.rating !== null && (
-                  <div className="flex items-center text-amber-500 text-sm mb-2">
-                    <Star size={14} className="mr-1 fill-amber-500" />
-                    <span>{item.rating}/10</span>
+              {/* Right side - Item information (60-70% width) */}
+              <div className="flex-1 p-4 flex flex-col justify-between min-w-0">
+                <div className="flex-1">
+                  <div className="flex items-center text-xs text-muted-foreground mb-1">
+                    <CategoryIcon size={12} className="mr-1" />
+                    <span>{categoryLabels[item.category]}</span>
                   </div>
-                )}
 
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <h3 className="font-medium text-lg leading-tight mb-2 line-clamp-2" title={item.title}>
+                    {item.title}
+                  </h3>
+
+                  {item.rating !== null && (
+                    <div className="flex items-center text-amber-500 text-sm mb-2">
+                      <Star size={14} className="mr-1 fill-amber-500" />
+                      <span>{item.rating}/10</span>
+                    </div>
+                  )}
+
                   {item.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
+                    <p className="text-sm text-muted-foreground line-clamp-2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       {item.description}
                     </p>
                   )}
+                </div>
+
+                {/* Bottom section with tags and metadata */}
+                <div className="flex items-end justify-between">
+                  <div className="flex-1 min-w-0">
+                    {item.tags && item.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {item.tags.slice(0, 2).map(tag => (
+                          <span
+                            key={tag}
+                            className="text-xs px-1.5 py-0.5 rounded bg-secondary text-muted-foreground"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                        {item.tags.length > 2 && (
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">
+                            +{item.tags.length - 2}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   {item.creator && (
-                    <p className="text-xs text-muted-foreground">
-                      Creator: {item.creator}
+                    <p className="text-xs text-muted-foreground ml-2 flex-shrink-0">
+                      {item.creator}
                     </p>
                   )}
                 </div>
-
-                {item.tags && item.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {item.tags.map(tag => (
-                      <span
-                        key={tag}
-                        className="text-xs px-1.5 py-0.5 rounded bg-secondary text-muted-foreground"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
           </div>
