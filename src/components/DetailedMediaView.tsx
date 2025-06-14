@@ -79,37 +79,15 @@ export const DetailedMediaView: React.FC<DetailedMediaViewProps> = ({ media }) =
               </div>
             )}
           </div>
-          
           <div className="mt-4 space-y-3">
             <Button variant="outline" className="w-full">
               <BookmarkPlus className="mr-2 h-4 w-4" />
               Add to Library
             </Button>
-            
             <Button variant="outline" className="w-full">
               <Star className="mr-2 h-4 w-4" />
               Rate & Review
             </Button>
-            
-            {details?.externalLinks?.length > 0 && (
-              <div className="space-y-2 mt-4">
-                <h4 className="font-medium text-sm">External Links</h4>
-                {details.externalLinks.map((link: any, index: number) => (
-                  <Button 
-                    key={index} 
-                    variant="outline" 
-                    size="sm" 
-                    className="w-full justify-start"
-                    asChild
-                  >
-                    <a href={link.url} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="mr-2 h-4 w-4" />
-                      {link.site}
-                    </a>
-                  </Button>
-                ))}
-              </div>
-            )}
           </div>
         </div>
         
@@ -144,9 +122,6 @@ export const DetailedMediaView: React.FC<DetailedMediaViewProps> = ({ media }) =
                 )}
                 {details?.trailer && (
                   <TabsTrigger value="trailer">Trailer</TabsTrigger>
-                )}
-                {details?.whereToWatch && (
-                  <TabsTrigger value="watch">Where to Watch</TabsTrigger>
                 )}
               </TabsList>
               
@@ -246,45 +221,6 @@ export const DetailedMediaView: React.FC<DetailedMediaViewProps> = ({ media }) =
                       allowFullScreen
                       className="w-full h-full"
                     ></iframe>
-                  </div>
-                </TabsContent>
-              )}
-              
-              {details?.whereToWatch && (
-                <TabsContent value="watch" className="mt-0">
-                  <div className="space-y-4">
-                    <h3 className="text-sm font-medium mb-2">Where to Watch</h3>
-                    
-                    {details.whereToWatch.length > 0 ? (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                        {details.whereToWatch.map((platform: any, index: number) => (
-                          <Button 
-                            key={index} 
-                            variant="outline" 
-                            className="h-auto py-2"
-                            asChild
-                          >
-                            <a href={platform.url} target="_blank" rel="noopener noreferrer">
-                              {platform.logo ? (
-                                <img 
-                                  src={platform.logo} 
-                                  alt={platform.name} 
-                                  className="h-6 mr-2" 
-                                />
-                              ) : (
-                                <MapPin className="mr-2 h-4 w-4" />
-                              )}
-                              {platform.name}
-                            </a>
-                          </Button>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8">
-                        <MapPin className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-                        <p>No streaming information available</p>
-                      </div>
-                    )}
                   </div>
                 </TabsContent>
               )}
