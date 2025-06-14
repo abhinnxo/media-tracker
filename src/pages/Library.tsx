@@ -22,6 +22,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { MediaDeleteDialog } from "@/components/MediaDeleteDialog";
+import { toast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const Library: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -35,6 +38,9 @@ const Library: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState<MediaStatus | "all">(
     "all"
   );
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<MediaItem | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -74,6 +80,50 @@ const Library: React.FC = () => {
 
     setFilteredItems(filtered);
   }, [mediaItems, searchQuery, selectedCategory, selectedStatus]);
+
+  // Add to Showcase handler (stub, override in ProfileShowcase as needed)
+  const handleAddToShowcase = (item: MediaItem) => {
+    toast({
+      title: "Not implemented",
+      description: "Add to showcase coming soon.",
+    });
+  };
+
+  // Edit handler
+  const handleEdit = (item: MediaItem) => {
+    navigate(`/edit/${item.id}`);
+  };
+
+  // Click delete (open modal, don't delete instantly)
+  const handleDelete = (item: MediaItem) => {
+    setItemToDelete(item);
+    setDeleteModalOpen(true);
+  };
+
+  // Confirm delete
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+    setIsLoading(true);
+    try {
+      await mediaStore.delete(itemToDelete.id);
+      setMediaItems(prev => prev.filter(i => i.id !== itemToDelete.id));
+      setFilteredItems(prev => prev.filter(i => i.id !== itemToDelete.id));
+      toast({
+        title: "Deleted",
+        description: `"${itemToDelete.title}" was removed from your library.`,
+      });
+      setDeleteModalOpen(false);
+      setItemToDelete(null);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete item.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -241,8 +291,20 @@ const Library: React.FC = () => {
                 item={item}
                 delay={index}
                 variant={viewMode}
+                onAddToShowcase={() => handleAddToShowcase(item)}
+                onEdit={() => handleEdit(item)}
+                onDelete={() => handleDelete(item)}
+                canAddToShowcase={true}
               />
             ))}
+            <MediaDeleteDialog
+              open={deleteModalOpen}
+              onOpenChange={setDeleteModalOpen}
+              onConfirm={confirmDelete}
+              isLoading={isLoading}
+              title="Delete media?"
+              description={`Are you sure you want to delete "${itemToDelete?.title}"? This action cannot be undone.`}
+            />
           </div>
         )}
       </div>
