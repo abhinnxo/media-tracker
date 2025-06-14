@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -367,12 +366,13 @@ const ListDetails = () => {
                 <div className={
                   viewMode === 'grid' 
                     ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
-                    : 'grid grid-cols-1 md:grid-cols-2 gap-4'
+                    : 'space-y-4'
                 }>
                   {items.map((item) => (
                     <MediaCard
                       key={item.id}
                       item={item}
+                      variant={viewMode}
                     />
                   ))}
                 </div>
