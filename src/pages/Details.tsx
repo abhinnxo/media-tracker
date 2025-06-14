@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { MediaItem, MediaStatus } from '@/lib/types';
@@ -62,19 +61,8 @@ const Details: React.FC = () => {
         if (item) {
           setMediaItem(item);
 
-          // Create detailed media search result for DetailedMediaView
-          const detailedData: MediaSearchResult = {
-            id: item.id,
-            title: item.title,
-            description: item.description || "",
-            imageUrl: item.image_url || "",
-            category: item.category as MediaCategory,
-            year: item.year || undefined,
-            creator: item.creator || undefined,
-            genres: item.genres || undefined,
-          };
-
-          setDetailedMedia(detailedData);
+          // Convert MediaItem to DetailedMediaView shape (no longer need to create MediaSearchResult)
+          setDetailedMedia(item);
         } else {
           toast({
             title: "Media not found",
@@ -213,7 +201,6 @@ const Details: React.FC = () => {
           <ArrowLeft size={18} className="mr-2" />
           Back
         </Button>
-
         <div className=" gap-8">
           <AnimatedTransition variant="slideUp" className="space-y-6 order-1 md:order-2">
             <div className="flex justify-between items-start">
@@ -270,7 +257,7 @@ const Details: React.FC = () => {
             </div>
 
             {/* User's personal notes section */}
-            {mediaItem.notes && (
+            {mediaItem?.notes && (
               <div>
                 <h2 className="flex items-center text-lg font-medium mb-2">
                   <MessageCircle size={18} className="mr-2" />
@@ -285,7 +272,7 @@ const Details: React.FC = () => {
             {/* Display detailed media information */}
             {detailedMedia && (
               <div className="mt-6">
-                <DetailedMediaView media={detailedMedia} />
+                <DetailedMediaView item={detailedMedia} />
               </div>
             )}
 
