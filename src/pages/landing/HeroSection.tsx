@@ -59,13 +59,14 @@ const Card = ({
   title: string;
 }) => (
   <div
-    className="relative rounded-2xl overflow-hidden shadow-xl glass-card transition-all-300 group min-h-[220px] flex flex-col"
-    style={{ background: 'rgba(24, 31, 63, 0.95)' }}
+    className="relative rounded-2xl overflow-hidden shadow-xl glass-card transition-all-300 group flex flex-col bg-slate-900/95"
+    style={{ minHeight: 200 }}
   >
     <img
       src={image}
       alt={title}
       className="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-300"
+      style={{ aspectRatio: '16/9' }}
     />
     <div className="flex-1 flex flex-col justify-between px-5 py-4">
       <div>
@@ -83,7 +84,7 @@ const Card = ({
 );
 
 const HeroSection: React.FC<HeroSectionProps> = ({ fadeIn, staggerContainer }) => (
-  <section className="pt-32 pb-20 md:pt-40 md:pb-28 px-4 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 min-h-[90vh] relative">
+  <section className="pt-32 pb-20 md:pt-40 md:pb-28 px-2 sm:px-4 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 min-h-[90vh] relative">
     <div className="container mx-auto max-w-6xl">
       <motion.div
         className="flex flex-col md:flex-row items-center justify-center gap-14 md:gap-4 min-h-[440px]"
@@ -139,12 +140,24 @@ const HeroSection: React.FC<HeroSectionProps> = ({ fadeIn, staggerContainer }) =
         {/* Right Side - Cards Grid with Glow */}
         <motion.div
           variants={fadeIn}
-          className="flex-1 flex justify-center items-center min-h-full relative"
+          className="flex-1 flex justify-center items-center min-h-full relative w-full"
         >
           {/* Neon Glow */}
-          <div className="absolute -inset-8 pointer-events-none z-0 rounded-3xl bg-gradient-to-tr from-purple-600/30 to-blue-500/20 blur-2xl opacity-70" />
+          <div className="absolute -inset-6 pointer-events-none z-0 rounded-3xl bg-gradient-to-tr from-purple-600/30 to-blue-500/20 blur-2xl opacity-70" />
           {/* Cards Grid */}
-          <div className="relative z-10 grid grid-cols-2 grid-rows-2 gap-6 md:gap-6 w-[350px] md:w-[400px]">
+          <div
+            className="
+              relative z-10 
+              grid grid-cols-1 
+              sm:grid-cols-2 sm:grid-rows-2 
+              gap-4 sm:gap-6
+              w-full 
+              max-w-xs
+              sm:max-w-[350px]
+              md:w-[400px] md:max-w-[400px] 
+              mx-auto
+            "
+          >
             {mockCards.map((card, idx) => (
               <Card key={idx} {...card} />
             ))}
