@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,6 +19,7 @@ import NotFound from "./pages/NotFound";
 import Onboarding from "./pages/Onboarding";
 import UserProfile from "./pages/user/[username]";
 import Explore from "./pages/Explore";
+import ImportPage from "./pages/Import";
 
 // Auth Pages
 import Login from "./pages/Auth/Login";
@@ -176,6 +176,14 @@ const App = () => (
                   element={
                     <ProtectedRoute>
                       <ListDetails />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/import"
+                  element={
+                    <ProtectedRoute>
+                      <ImportPage />
                     </ProtectedRoute>
                   }
                 />

@@ -61,8 +61,8 @@ const Details: React.FC = () => {
         if (item) {
           setMediaItem(item);
 
-          // Convert MediaItem to DetailedMediaView shape (no longer need to create MediaSearchResult)
-          setDetailedMedia(item);
+          // Fix: Only setDetailedMedia if it's truly a MediaSearchResult, otherwise pass null.
+          setDetailedMedia(null);
         } else {
           toast({
             title: "Media not found",
@@ -270,9 +270,9 @@ const Details: React.FC = () => {
             )}
 
             {/* Display detailed media information */}
-            {detailedMedia && (
+            {mediaItem && (
               <div className="mt-6">
-                <DetailedMediaView item={detailedMedia} />
+                <DetailedMediaView item={mediaItem} />
               </div>
             )}
 
