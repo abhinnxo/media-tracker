@@ -280,43 +280,50 @@ const Library: React.FC = () => {
             onValueChange={(value) =>
               setSelectedCategory(value as MediaCategory | "all")
             }
-            className="w-full overflow-x-auto"
+            className="w-full"
           >
-            <TabsList className="w-full sm:w-auto justify-start">
-              <TabsTrigger value="all" className="whitespace-nowrap">
-                All
-              </TabsTrigger>
-              <TabsTrigger
-                value={MediaCategory.MOVIE}
-                className="whitespace-nowrap"
+            <div className="w-full overflow-x-auto scrollbar-hide">
+              <TabsList
+                className="flex w-max min-w-full sm:w-auto sm:min-w-0 px-0 gap-1"
+                style={{
+                  WebkitOverflowScrolling: "touch",
+                }}
               >
-                Movies
-              </TabsTrigger>
-              <TabsTrigger
-                value={MediaCategory.TV_SERIES}
-                className="whitespace-nowrap"
-              >
-                TV Series
-              </TabsTrigger>
-              <TabsTrigger
-                value={MediaCategory.ANIME}
-                className="whitespace-nowrap"
-              >
-                Anime
-              </TabsTrigger>
-              <TabsTrigger
-                value={MediaCategory.BOOK}
-                className="whitespace-nowrap"
-              >
-                Books
-              </TabsTrigger>
-              <TabsTrigger
-                value={MediaCategory.MANGA}
-                className="whitespace-nowrap"
-              >
-                Manga
-              </TabsTrigger>
-            </TabsList>
+                <TabsTrigger value="all" className="whitespace-nowrap">
+                  All
+                </TabsTrigger>
+                <TabsTrigger
+                  value={MediaCategory.MOVIE}
+                  className="whitespace-nowrap"
+                >
+                  Movies
+                </TabsTrigger>
+                <TabsTrigger
+                  value={MediaCategory.TV_SERIES}
+                  className="whitespace-nowrap"
+                >
+                  TV Series
+                </TabsTrigger>
+                <TabsTrigger
+                  value={MediaCategory.ANIME}
+                  className="whitespace-nowrap"
+                >
+                  Anime
+                </TabsTrigger>
+                <TabsTrigger
+                  value={MediaCategory.BOOK}
+                  className="whitespace-nowrap"
+                >
+                  Books
+                </TabsTrigger>
+                <TabsTrigger
+                  value={MediaCategory.MANGA}
+                  className="whitespace-nowrap"
+                >
+                  Manga
+                </TabsTrigger>
+              </TabsList>
+            </div>
           </Tabs>
 
           <div className="w-full sm:w-auto flex items-center gap-2">
