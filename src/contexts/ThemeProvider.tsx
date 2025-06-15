@@ -1,6 +1,6 @@
 
 import { createContext, useState, useEffect } from "react";
-import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes";
 
 interface ThemeProviderProps {
   children: React.ReactNode;
@@ -32,3 +32,6 @@ export function ThemeProvider({
     </NextThemesProvider>
   );
 }
+
+// Re-export useTheme for convenience
+export { useTheme };

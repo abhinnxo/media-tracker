@@ -191,18 +191,18 @@ const ImportPage: React.FC = () => {
             continue;
           }
           try {
-            await mediaStore.add({ ...clean, user_id: user?.id });
+            await mediaStore.save({ ...clean, user_id: user?.id } as MediaItem);
             success++;
             details.push({
               row: rowNum,
-              title: clean.title,
+              title: clean.title!,
               status: "success",
             });
           } catch (e: any) {
             fail++;
             details.push({
               row: rowNum,
-              title: clean.title,
+              title: clean.title!,
               status: "fail",
               errors: [e.message ?? "Failed to import"],
             });
